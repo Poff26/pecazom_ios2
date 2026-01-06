@@ -1,7 +1,6 @@
-import 'package:fishing_app_flutter/services/weather_service.dart';
+import 'package:flutter/material.dart';
 import 'package:fishing_app_flutter/models/weather_response.dart';
-
-
+import 'package:fishing_app_flutter/services/weather_service.dart';
 
 class WeatherViewModel extends ChangeNotifier {
   final WeatherService _weatherService = WeatherService();
