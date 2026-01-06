@@ -1,5 +1,6 @@
-import 'package:flutter/material.dart';
-import 'package:fishing_app_flutter/widgets/weather/meteo_field_loader.dart';
+import 'package:fishing_app_flutter/services/weather_service.dart';
+import 'package:fishing_app_flutter/models/weather_response.dart';
+
 
 
 class WeatherViewModel extends ChangeNotifier {
