@@ -2,7 +2,7 @@ name: fishing_app_flutter
 description: "Fishing app – Flutter, Firebase, Maps, AI forecast"
 publish_to: 'none'
 
-version: 2.0.2+20
+version: 2.0.2+21
 
 environment:
   sdk: '>=3.8.0 <4.0.0'
@@ -39,7 +39,6 @@ dependencies:
 
   # Notifications
   flutter_local_notifications: ^19.3.0
-  firebase_crashlytics: ^4.1.0
 
   # UI / UX
   fl_chart: ^1.1.1
