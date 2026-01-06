@@ -1,0 +1,3110 @@
+[
+  {
+    "name": "A Beton-tó",
+    "location": "Hatvan",
+    "lat": 47.6683971,
+    "lon": 19.6743874
+  },
+  {
+    "name": "Abonyi Horgásztavak",
+    "location": "Abony",
+    "lat": 47.1887402,
+    "lon": 20.0047823
+  },
+  {
+    "name": "Acélgyári Horgásztó",
+    "location": "Mátraszele",
+    "lat": 48.0553975,
+    "lon": 19.893917
+  },
+  {
+    "name": "Adonyi Holt-Duna-ág",
+    "location": "Adony",
+    "lat": 47.1208993,
+    "lon": 18.8631074
+  },
+  {
+    "name": "Áfonyás-tó",
+    "location": "Nagyhuta",
+    "lat": 48.4285508,
+    "lon": 21.493734
+  },
+  {
+    "name": "Alcsiszigeti Holt-Tisza",
+    "location": "Szolnok",
+    "lat": 47.1753833,
+    "lon": 20.1946279
+  },
+  {
+    "name": "Alerán-tó",
+    "location": "Kadarkút",
+    "lat": 46.2285551,
+    "lon": 17.6178719
+  },
+  {
+    "name": "Almamelléki horgásztó",
+    "location": "Almamellék",
+    "lat": 46.1575387,
+    "lon": 17.8741358
+  },
+  {
+    "name": "Alsózsolcai Házgyári-tó",
+    "location": "Alsózsolca",
+    "lat": 48.0703015,
+    "lon": 20.8819968
+  },
+  {
+    "name": "Aranyponty Horgászcentrum",
+    "location": "Sárbogárd",
+    "lat": 46.8874371,
+    "lon": 18.6196247
+  },
+  {
+    "name": "Árpád-hegyi horgásztó",
+    "location": "Szerencs",
+    "lat": 48.1633851,
+    "lon": 21.2010881
+  },
+  {
+    "name": "Ász Horgásztó",
+    "location": "Sárrétudvari",
+    "lat": 47.2392356,
+    "lon": 21.1895381
+  },
+  {
+    "name": "Átal-ér",
+    "location": "Tata",
+    "lat": 47.6516214,
+    "lon": 18.3282083
+  },
+  {
+    "name": "Atkai holtág",
+    "location": "Szeged",
+    "lat": 46.2546312,
+    "lon": 20.1486016
+  },
+  {
+    "name": "Babatvölgyi Horgásztó",
+    "location": "Gödöllő",
+    "lat": 47.601529,
+    "lon": 19.3476981
+  },
+  {
+    "name": "Bácsbokodi víztározó",
+    "location": "Bácsbokod",
+    "lat": 46.1240247,
+    "lon": 19.1558176
+  },
+  {
+    "name": "Báger-tó",
+    "location": "Mosonmagyaróvár",
+    "lat": 47.8731793,
+    "lon": 17.2722342
+  },
+  {
+    "name": "Baki víztározó",
+    "location": "Bak",
+    "lat": 46.7306266,
+    "lon": 16.8455824
+  },
+  {
+    "name": "Bakodi tó",
+    "location": "Tata",
+    "lat": 47.6516214,
+    "lon": 18.3282083
+  },
+  {
+    "name": "Bakonyalja-tó",
+    "location": "Bakonyszücs",
+    "lat": 47.3428492,
+    "lon": 17.681372
+  },
+  {
+    "name": "Baksa-tó",
+    "location": "Zalabaksa",
+    "lat": 46.7066562,
+    "lon": 16.5538729
+  },
+  {
+    "name": "Balázs-tó",
+    "location": "Budapest",
+    "lat": 47.4813896,
+    "lon": 19.1460941
+  },
+  {
+    "name": "Bánhidai Erőmű-hűtőtó",
+    "location": "Tatabánya",
+    "lat": 47.583845,
+    "lon": 18.3979855
+  },
+  {
+    "name": "Bányató",
+    "location": "Berekböszörmény",
+    "lat": 47.0650084,
+    "lon": 21.6835918
+  },
+  {
+    "name": "Bányató",
+    "location": "Erdőbénye",
+    "lat": 48.2662624,
+    "lon": 21.3560139
+  },
+  {
+    "name": "Bányató",
+    "location": "Egerbakta",
+    "lat": 47.9355323,
+    "lon": 20.2905231
+  },
+  {
+    "name": "Bara-tó",
+    "location": "Csávoly",
+    "lat": 46.194385,
+    "lon": 19.1441018
+  },
+  {
+    "name": "Barátok-tava",
+    "location": "Kisszékely",
+    "lat": 46.679423,
+    "lon": 18.5389986
+  },
+  {
+    "name": "Bári-tó",
+    "location": "Kisbárapáti",
+    "lat": 46.6029797,
+    "lon": 17.8660958
+  },
+  {
+    "name": "Barina horgásztó",
+    "location": "Csővár",
+    "lat": 47.8137655,
+    "lon": 19.3238481
+  },
+  {
+    "name": "Békás-tó",
+    "location": "Mezőhegyes",
+    "lat": 46.3139611,
+    "lon": 20.8194076
+  },
+  {
+    "name": "Belső tó",
+    "location": "Petőháza",
+    "lat": 47.597363,
+    "lon": 16.8933475
+  },
+  {
+    "name": "Belső tó",
+    "location": "Berekfürdő",
+    "lat": 47.3863531,
+    "lon": 20.837934
+  },
+  {
+    "name": "Belső-tó",
+    "location": "Tihany",
+    "lat": 46.9122292,
+    "lon": 17.8917574
+  },
+  {
+    "name": "Berek Horgászpark",
+    "location": "Hövej",
+    "lat": 47.5494574,
+    "lon": 17.0204242
+  },
+  {
+    "name": "Biharugrai-halastavak",
+    "location": "Biharugra",
+    "lat": 46.9689132,
+    "lon": 21.5950874
+  },
+  {
+    "name": "Bikácsi horgásztó",
+    "location": "Bikács",
+    "lat": 46.6759851,
+    "lon": 18.6636898
+  },
+  {
+    "name": "Bissei horgásztó",
+    "location": "Bisse",
+    "lat": 45.9077627,
+    "lon": 18.2592284
+  },
+  {
+    "name": "Bitva patak",
+    "location": "Németbánya",
+    "lat": 47.2147128,
+    "lon": 17.6465684
+  },
+  {
+    "name": "Bőcsi kavicsbányató",
+    "location": "Bőcs",
+    "lat": 48.0385461,
+    "lon": 20.9716444
+  },
+  {
+    "name": "Boda-tó",
+    "location": "Nagykamarás",
+    "lat": 46.473416,
+    "lon": 21.1156928
+  },
+  {
+    "name": "Bodai-tó",
+    "location": "Boda",
+    "lat": 46.0808583,
+    "lon": 18.0478346
+  },
+  {
+    "name": "Bodonyi Horgásztó",
+    "location": "Bodony",
+    "lat": 47.9422866,
+    "lon": 20.0238122
+  },
+  {
+    "name": "Bódva",
+    "location": "Boldva",
+    "lat": 48.217181,
+    "lon": 20.7884169
+  },
+  {
+    "name": "Bokodi hűtőtó",
+    "location": "Oroszlány",
+    "lat": 47.4897011,
+    "lon": 18.3148401
+  },
+  {
+    "name": "Bónom-zug",
+    "location": "Gyomaendrőd",
+    "lat": 46.9358032,
+    "lon": 20.8260916
+  },
+  {
+    "name": "Bonyhádi-tőzegtavak",
+    "location": "Bonyhád",
+    "lat": 46.2984212,
+    "lon": 18.532191
+  },
+  {
+    "name": "Borbála horgásztó",
+    "location": "Kistapolca",
+    "lat": 45.8221493,
+    "lon": 18.3840849
+  },
+  {
+    "name": "Borostyán-tó",
+    "location": "Zalalövő",
+    "lat": 46.8461983,
+    "lon": 16.5852286
+  },
+  {
+    "name": "Borsosgyőri Kékvízű tó",
+    "location": "Pápa",
+    "lat": 47.3261087,
+    "lon": 17.4705293
+  },
+  {
+    "name": "Borza-tó",
+    "location": "Szajk",
+    "lat": 45.9918187,
+    "lon": 18.5329256
+  },
+  {
+    "name": "Botpusztai-tó",
+    "location": "Etyek",
+    "lat": 47.4448813,
+    "lon": 18.7504665
+  },
+  {
+    "name": "Bottyán-tó",
+    "location": "Esztergom",
+    "lat": 47.7856939,
+    "lon": 18.7403377
+  },
+  {
+    "name": "Búbánat-völgyi Kerek-tó",
+    "location": "Esztergom",
+    "lat": 47.7856939,
+    "lon": 18.7403377
+  },
+  {
+    "name": "Bujtosi horgásztó",
+    "location": "Nyíregyháza",
+    "lat": 47.9557802,
+    "lon": 21.7167982
+  },
+  {
+    "name": "Büki Horgásztó",
+    "location": "Bük",
+    "lat": 47.3833959,
+    "lon": 16.753305
+  },
+  {
+    "name": "Buki-holtág",
+    "location": "Vác",
+    "lat": 47.7782873,
+    "lon": 19.1278294
+  },
+  {
+    "name": "Búzásvölgyi víztározó",
+    "location": "Recsk",
+    "lat": 47.9356893,
+    "lon": 20.1103528
+  },
+  {
+    "name": "Buzsáki Tógazdaság",
+    "location": "Buzsák",
+    "lat": 46.6487053,
+    "lon": 17.5774653
+  },
+  {
+    "name": "CARPediem Lake Horgásztó",
+    "location": "Pér",
+    "lat": 47.6123429,
+    "lon": 17.7979394
+  },
+  {
+    "name": "Csádés-tó",
+    "location": "Kisszékely",
+    "lat": 46.679423,
+    "lon": 18.5389986
+  },
+  {
+    "name": "Csánigi bányató",
+    "location": "Csánig",
+    "lat": 47.4325669,
+    "lon": 17.0234452
+  },
+  {
+    "name": "Császárszállás-oláhréti víztározó",
+    "location": "Nyíregyháza",
+    "lat": 47.9557802,
+    "lon": 21.7167982
+  },
+  {
+    "name": "Cseke-tó",
+    "location": "Tata",
+    "lat": 47.6516214,
+    "lon": 18.3282083
+  },
+  {
+    "name": "Cseres-tó",
+    "location": "Kisoroszi",
+    "lat": 47.8077589,
+    "lon": 19.0071715
+  },
+  {
+    "name": "Cserhátsurányi-tó",
+    "location": "Cserhátsurány",
+    "lat": 47.9775035,
+    "lon": 19.4264404
+  },
+  {
+    "name": "Cserkész-tó",
+    "location": "Kereki",
+    "lat": 46.7959566,
+    "lon": 17.9118845
+  },
+  {
+    "name": "Csiszlói bányató",
+    "location": "Kunsziget",
+    "lat": 47.7393981,
+    "lon": 17.5152083
+  },
+  {
+    "name": "Csobádi kavicsbányatavak",
+    "location": "Csobád",
+    "lat": 48.2819349,
+    "lon": 21.0277433
+  },
+  {
+    "name": "Csomai horgásztó",
+    "location": "Csoma",
+    "lat": 46.3726866,
+    "lon": 18.0509268
+  },
+  {
+    "name": "Csömödéri víztározó",
+    "location": "Csömödér",
+    "lat": 46.6113857,
+    "lon": 16.6392065
+  },
+  {
+    "name": "Csömöri horgásztó",
+    "location": "Csömör",
+    "lat": 47.5489158,
+    "lon": 19.2242144
+  },
+  {
+    "name": "Csónakázó-tó",
+    "location": "Tószeg",
+    "lat": 47.1005785,
+    "lon": 20.1474605
+  },
+  {
+    "name": "Csónakázó-tó",
+    "location": "Vasvár",
+    "lat": 47.0490649,
+    "lon": 16.7998821
+  },
+  {
+    "name": "Csónakázó-tó",
+    "location": "Kazincbarcika",
+    "lat": 48.2544414,
+    "lon": 20.6223251
+  },
+  {
+    "name": "Csónakázó-tó",
+    "location": "Kőszeg",
+    "lat": 47.3894949,
+    "lon": 16.5406843
+  },
+  {
+    "name": "Csónakázótó",
+    "location": "Ózd",
+    "lat": 48.2239095,
+    "lon": 20.2895983
+  },
+  {
+    "name": "Dabasi Horgásztó",
+    "location": "Dabas",
+    "lat": 47.1886122,
+    "lon": 19.3203063
+  },
+  {
+    "name": "Dan-zug holtág",
+    "location": "Gyomaendrőd",
+    "lat": 46.9358032,
+    "lon": 20.8260916
+  },
+  {
+    "name": "Dányi horgásztó",
+    "location": "Dány",
+    "lat": 47.5222089,
+    "lon": 19.5508325
+  },
+  {
+    "name": "Délpesti-tó",
+    "location": "Délegyháza",
+    "lat": 47.247818,
+    "lon": 19.066912
+  },
+  {
+    "name": "Derekegyházi Halastó",
+    "location": "Derekegyház",
+    "lat": 46.5821452,
+    "lon": 20.3559703
+  },
+  {
+    "name": "Deseda-tó",
+    "location": "Kaposvár",
+    "lat": 46.3564692,
+    "lon": 17.7886886
+  },
+  {
+    "name": "Deszki-tó",
+    "location": "Deszk",
+    "lat": 46.2179342,
+    "lon": 20.2388863
+  },
+  {
+    "name": "Diósjenői horgásztó",
+    "location": "Diósjenő",
+    "lat": 47.9395202,
+    "lon": 19.0437008
+  },
+  {
+    "name": "Dodó Vadfarm és Horgásztó",
+    "location": "Dunaremete",
+    "lat": 47.8766438,
+    "lon": 17.437091
+  },
+  {
+    "name": "Domolosi Tó",
+    "location": "Szigetvár",
+    "lat": 46.0474395,
+    "lon": 17.7993511
+  },
+  {
+    "name": "Domonyvölgyi horgásztó",
+    "location": "Domony",
+    "lat": 47.6535146,
+    "lon": 19.4384419
+  },
+  {
+    "name": "Domoszlói horgásztó",
+    "location": "Domoszló",
+    "lat": 47.8262949,
+    "lon": 20.1163279
+  },
+  {
+    "name": "Dömsödi Holt-Dunaág",
+    "location": "Dömsöd",
+    "lat": 47.094771,
+    "lon": 19.0070461
+  },
+  {
+    "name": "Döröskei tó",
+    "location": "Döröske",
+    "lat": 47.0123331,
+    "lon": 16.6976755
+  },
+  {
+    "name": "Dózer-tó",
+    "location": "Penészlek",
+    "lat": 47.6349848,
+    "lon": 22.1433664
+  },
+  {
+    "name": "Dráva folyó",
+    "location": "Heresznye",
+    "lat": 46.0555387,
+    "lon": 17.2760401
+  },
+  {
+    "name": "Dunakeszi Kavicsbányató",
+    "location": "Dunakeszi",
+    "lat": 47.6316697,
+    "lon": 19.1294055
+  },
+  {
+    "name": "Dunakeszi tözegtó",
+    "location": "Dunakeszi",
+    "lat": 47.6316697,
+    "lon": 19.1294055
+  },
+  {
+    "name": "Dunaszentpáli kavicsbányató",
+    "location": "Dunaszentpál",
+    "lat": 47.7766029,
+    "lon": 17.5068333
+  },
+  {
+    "name": "Dunaújvárosi Felső-öböl",
+    "location": "Dunaújváros",
+    "lat": 46.9669545,
+    "lon": 18.9393976
+  },
+  {
+    "name": "Ecsédi Vég-tó",
+    "location": "Ecséd",
+    "lat": 47.7323069,
+    "lon": 19.7728816
+  },
+  {
+    "name": "Ecseri horgásztó",
+    "location": "Ecser",
+    "lat": 47.4445025,
+    "lon": 19.3184563
+  },
+  {
+    "name": "Éden-tavak",
+    "location": "Sarkad",
+    "lat": 46.7422871,
+    "lon": 21.3836478
+  },
+  {
+    "name": "Egerszalóki horgásztó",
+    "location": "Egerszalók",
+    "lat": 47.8702335,
+    "lon": 20.3238326
+  },
+  {
+    "name": "Eldorádó Horgásztó",
+    "location": "Jásztelek",
+    "lat": 47.481372,
+    "lon": 20.0023081
+  },
+  {
+    "name": "Előszállási horgásztó",
+    "location": "Előszállás",
+    "lat": 46.8316103,
+    "lon": 18.8219252
+  },
+  {
+    "name": "Emődi kavicsbányatavak",
+    "location": "Emőd",
+    "lat": 47.9339466,
+    "lon": 20.8165452
+  },
+  {
+    "name": "Esztergomi Kis-Duna",
+    "location": "Esztergom",
+    "lat": 47.7856939,
+    "lon": 18.7403377
+  },
+  {
+    "name": "Etelka csónakázó és horgásztó",
+    "location": "Bózsva",
+    "lat": 48.4746423,
+    "lon": 21.467721
+  },
+  {
+    "name": "Ezersziget horgásztó",
+    "location": "Nézsa",
+    "lat": 47.8448824,
+    "lon": 19.2976212
+  },
+  {
+    "name": "Fábián-tó",
+    "location": "Bodonhely",
+    "lat": 47.5649133,
+    "lon": 17.4073298
+  },
+  {
+    "name": "Fárasztó horgásztó és Ökopark",
+    "location": "Boconád",
+    "lat": 47.6420641,
+    "lon": 20.1873111
+  },
+  {
+    "name": "Farmosi II. sz. víztározó",
+    "location": "Farmos",
+    "lat": 47.3616376,
+    "lon": 19.8489595
+  },
+  {
+    "name": "Fehérvárcsurgói víztározó",
+    "location": "Fehérvárcsurgó",
+    "lat": 47.2905701,
+    "lon": 18.2658414
+  },
+  {
+    "name": "Fekete- Körös",
+    "location": "Gyula",
+    "lat": 46.6438656,
+    "lon": 21.2747575
+  },
+  {
+    "name": "Feketeberki II-III. tározó",
+    "location": "Bakonycsernye",
+    "lat": 47.3194796,
+    "lon": 18.085004
+  },
+  {
+    "name": "Feketevízpusztai-tó",
+    "location": "Bakonyszombathely",
+    "lat": 47.4703383,
+    "lon": 17.9624907
+  },
+  {
+    "name": "Félegyházi Horgásztó",
+    "location": "Kiskunfélegyháza",
+    "lat": 46.7114381,
+    "lon": 19.8501648
+  },
+  {
+    "name": "Félhalmi-holtág (Biristyók)",
+    "location": "Gyomaendrőd",
+    "lat": 46.9358032,
+    "lon": 20.8260916
+  },
+  {
+    "name": "Felsőfarkasdi horgásztó",
+    "location": "Gomba",
+    "lat": 47.3703744,
+    "lon": 19.5311516
+  },
+  {
+    "name": "Felsőtárkányi-tó",
+    "location": "Felsőtárkány",
+    "lat": 47.9720171,
+    "lon": 20.4143577
+  },
+  {
+    "name": "Fertő-tó",
+    "location": "Fertőd",
+    "lat": 47.6216348,
+    "lon": 16.8645834
+  },
+  {
+    "name": "Fertőzug Horgász és Szabadidőpark",
+    "location": "Székesfehérvár",
+    "lat": 47.1910169,
+    "lon": 18.410811
+  },
+  {
+    "name": "Fish Aréna horgásztó",
+    "location": "Lajosmizse",
+    "lat": 47.0264714,
+    "lon": 19.5582644
+  },
+  {
+    "name": "Fish Farm Horgásztó",
+    "location": "Zsennye",
+    "lat": 47.1129443,
+    "lon": 16.8162329
+  },
+  {
+    "name": "Fodor Horgásztó",
+    "location": "Kajárpéc",
+    "lat": 47.4951901,
+    "lon": 17.6272578
+  },
+  {
+    "name": "Földesi Horgásztó",
+    "location": "Földes",
+    "lat": 47.2881601,
+    "lon": 21.3642071
+  },
+  {
+    "name": "Fritz tavak",
+    "location": "Ceglédbercel",
+    "lat": 47.2150336,
+    "lon": 19.678569
+  },
+  {
+    "name": "Füzes-tó",
+    "location": "Látrány",
+    "lat": 46.7484949,
+    "lon": 17.7445759
+  },
+  {
+    "name": "Fűzvölgyi-öntöző-főcsatorna",
+    "location": "Harta",
+    "lat": 46.6947199,
+    "lon": 19.0277119
+  },
+  {
+    "name": "Gaja-patak",
+    "location": "Székesfehérvár",
+    "lat": 47.1910169,
+    "lon": 18.410811
+  },
+  {
+    "name": "Galamboki halastó",
+    "location": "Galambok",
+    "lat": 46.5222609,
+    "lon": 17.1257806
+  },
+  {
+    "name": "Galgahévizi-víztározó",
+    "location": "Galgahévíz",
+    "lat": 47.6222577,
+    "lon": 19.5558378
+  },
+  {
+    "name": "Garancsi-tó",
+    "location": "Tinnye",
+    "lat": 47.6208911,
+    "lon": 18.7778879
+  },
+  {
+    "name": "Göbölyvölgyi bányató",
+    "location": "Csákvár",
+    "lat": 47.3918045,
+    "lon": 18.464064
+  },
+  {
+    "name": "Gombai-víztározó",
+    "location": "Gomba",
+    "lat": 47.3703744,
+    "lon": 19.5311516
+  },
+  {
+    "name": "Gombás-tó",
+    "location": "Szuha",
+    "lat": 47.9781794,
+    "lon": 19.9176663
+  },
+  {
+    "name": "Gonozd I-II-tavak",
+    "location": "Tamási",
+    "lat": 46.6293978,
+    "lon": 18.2850331
+  },
+  {
+    "name": "Gulyagyepi horgásztó",
+    "location": "Tiszasüly",
+    "lat": 47.3891094,
+    "lon": 20.3876966
+  },
+  {
+    "name": "Gyermelyi Horgásztó",
+    "location": "Gyermely",
+    "lat": 47.5910684,
+    "lon": 18.6439003
+  },
+  {
+    "name": "Gyoma-Siratói holtág",
+    "location": "Gyomaendrőd",
+    "lat": 46.9358032,
+    "lon": 20.8260916
+  },
+  {
+    "name": "Gyöngyös horgásztó",
+    "location": "Kétújfalu",
+    "lat": 45.9634473,
+    "lon": 17.7120496
+  },
+  {
+    "name": "Gyöngyös patak",
+    "location": "Vasszécsény",
+    "lat": 47.1817551,
+    "lon": 16.7679618
+  },
+  {
+    "name": "Gyöngyös-patak",
+    "location": "Sárvár",
+    "lat": 47.2517426,
+    "lon": 16.9342165
+  },
+  {
+    "name": "Gyöngyös-patak",
+    "location": "Szombathely",
+    "lat": 47.2291184,
+    "lon": 16.6187625
+  },
+  {
+    "name": "Gyöngyöspatai-horgásztó",
+    "location": "Gyöngyöspata",
+    "lat": 47.8146817,
+    "lon": 19.7903391
+  },
+  {
+    "name": "Gyopárosi-tó",
+    "location": "Orosháza",
+    "lat": 46.5603339,
+    "lon": 20.6693477
+  },
+  {
+    "name": "György-víz",
+    "location": "Csongrád",
+    "lat": 46.7097618,
+    "lon": 20.1537305
+  },
+  {
+    "name": "Győri Ipari-csatorna",
+    "location": "Győr",
+    "lat": 47.687609,
+    "lon": 17.6346815
+  },
+  {
+    "name": "Hajmáspusztai-horgásztó",
+    "location": "Bakonyszentkirály",
+    "lat": 47.3639276,
+    "lon": 17.8826006
+  },
+  {
+    "name": "Halastó",
+    "location": "Kaposgyarmat",
+    "lat": 46.2799324,
+    "lon": 17.8832113
+  },
+  {
+    "name": "Halastó",
+    "location": "Orci",
+    "lat": 46.4061836,
+    "lon": 17.8723723
+  },
+  {
+    "name": "Halastó",
+    "location": "Ököritófülpös",
+    "lat": 47.919036,
+    "lon": 22.5090032
+  },
+  {
+    "name": "Halastó",
+    "location": "Jánoshalma",
+    "lat": 46.2972264,
+    "lon": 19.3235909
+  },
+  {
+    "name": "Halastó",
+    "location": "Tarján",
+    "lat": 47.6088065,
+    "lon": 18.5063222
+  },
+  {
+    "name": "Halastó",
+    "location": "Ravazd",
+    "lat": 47.5111583,
+    "lon": 17.7518616
+  },
+  {
+    "name": "Halastó",
+    "location": "Nagylengyel",
+    "lat": 46.778581,
+    "lon": 16.7633768
+  },
+  {
+    "name": "Halastó",
+    "location": "Szentbalázs",
+    "lat": 46.319168,
+    "lon": 17.8959647
+  },
+  {
+    "name": "Halastó",
+    "location": "Libickozma",
+    "lat": 46.522576,
+    "lon": 17.5333804
+  },
+  {
+    "name": "Hangonyi-tó",
+    "location": "Hangony",
+    "lat": 48.2260525,
+    "lon": 20.2007281
+  },
+  {
+    "name": "Hantosi Horgászcentrum",
+    "location": "Hantos",
+    "lat": 46.9948664,
+    "lon": 18.6991205
+  },
+  {
+    "name": "Hantoskerti-holtág",
+    "location": "Gyomaendrőd",
+    "lat": 46.9358032,
+    "lon": 20.8260916
+  },
+  {
+    "name": "Harangozó-tó",
+    "location": "Tápióbicske",
+    "lat": 47.3622153,
+    "lon": 19.6867465
+  },
+  {
+    "name": "Harcsa Horgásztó",
+    "location": "Majosháza",
+    "lat": 47.2644792,
+    "lon": 18.9958458
+  },
+  {
+    "name": "Háromfa horgásztó",
+    "location": "Háromfa",
+    "lat": 46.1046252,
+    "lon": 17.3295434
+  },
+  {
+    "name": "Hárosi-öböl",
+    "location": "Budapest",
+    "lat": 47.4813896,
+    "lon": 19.1460941
+  },
+  {
+    "name": "Harsányi horgasztó",
+    "location": "Harsány",
+    "lat": 47.9684365,
+    "lon": 20.7404871
+  },
+  {
+    "name": "Hársasberki halastó",
+    "location": "Kisgyalán",
+    "lat": 46.4235276,
+    "lon": 17.9762076
+  },
+  {
+    "name": "Hasznosi víztározó",
+    "location": "Pásztó",
+    "lat": 47.9210634,
+    "lon": 19.6997727
+  },
+  {
+    "name": "Hegyesd Bányató",
+    "location": "Hegyesd",
+    "lat": 46.915887,
+    "lon": 17.5220762
+  },
+  {
+    "name": "Hegykői Horgásztó",
+    "location": "Hegykő",
+    "lat": 47.6216968,
+    "lon": 16.7940665
+  },
+  {
+    "name": "Herendi bányató",
+    "location": "Herend",
+    "lat": 47.1328461,
+    "lon": 17.7523356
+  },
+  {
+    "name": "Herman Ottó-tó",
+    "location": "Orfű",
+    "lat": 46.1380554,
+    "lon": 18.1551995
+  },
+  {
+    "name": "Hetvehelyi Horgásztó",
+    "location": "Hetvehely",
+    "lat": 46.1321454,
+    "lon": 18.0441532
+  },
+  {
+    "name": "Hidegkúti horgásztó",
+    "location": "Budapest",
+    "lat": 47.4813896,
+    "lon": 19.1460941
+  },
+  {
+    "name": "Himfai Környezetvédelmi-tó",
+    "location": "Felsőmarác",
+    "lat": 46.9334097,
+    "lon": 16.5196235
+  },
+  {
+    "name": "Hiricsi-tó",
+    "location": "Hirics",
+    "lat": 45.8261379,
+    "lon": 17.9936101
+  },
+  {
+    "name": "Ho-Hó tó Horgászparadicsom",
+    "location": "Kecskemét",
+    "lat": 46.9073883,
+    "lon": 19.6917206
+  },
+  {
+    "name": "Holt-Duna",
+    "location": "Bogyiszló",
+    "lat": 46.3832444,
+    "lon": 18.8166969
+  },
+  {
+    "name": "Holt-Kraszna",
+    "location": "Olcsva",
+    "lat": 48.0884918,
+    "lon": 22.3291746
+  },
+  {
+    "name": "Holt-Marcal",
+    "location": "Győr",
+    "lat": 47.687609,
+    "lon": 17.6346815
+  },
+  {
+    "name": "Holt-Rába",
+    "location": "Ikrény",
+    "lat": 47.654032,
+    "lon": 17.5292492
+  },
+  {
+    "name": "Holt-Szamos",
+    "location": "Géberjén",
+    "lat": 47.9319991,
+    "lon": 22.4560105
+  },
+  {
+    "name": "Holt-Szamos",
+    "location": "Győrtelek",
+    "lat": 47.9284221,
+    "lon": 22.4406866
+  },
+  {
+    "name": "Holt-Szamos",
+    "location": "Tunyogmatolcs",
+    "lat": 47.9706517,
+    "lon": 22.4582423
+  },
+  {
+    "name": "Holt-Tisza",
+    "location": "Cibakháza",
+    "lat": 46.9590236,
+    "lon": 20.2062362
+  },
+  {
+    "name": "Holt-Tisza",
+    "location": "Tiszakécske",
+    "lat": 46.9315289,
+    "lon": 20.1045358
+  },
+  {
+    "name": "Homokbányató",
+    "location": "Ártánd",
+    "lat": 47.1252992,
+    "lon": 21.7572321
+  },
+  {
+    "name": "Homokszentgyörgyi Horgásztó",
+    "location": "Homokszentgyörgy",
+    "lat": 46.115998,
+    "lon": 17.5689682
+  },
+  {
+    "name": "Horgászcentrum és pihenőpark",
+    "location": "Kunadacs",
+    "lat": 46.9561969,
+    "lon": 19.2945534
+  },
+  {
+    "name": "Horgásztanya-Kemping",
+    "location": "Boldogasszonyfa",
+    "lat": 46.1794268,
+    "lon": 17.8381187
+  },
+  {
+    "name": "Horgásztavak",
+    "location": "Csolnok",
+    "lat": 47.6946334,
+    "lon": 18.7175944
+  },
+  {
+    "name": "Horgásztavak",
+    "location": "Beled",
+    "lat": 47.4661125,
+    "lon": 17.0898826
+  },
+  {
+    "name": "Horgásztavak",
+    "location": "Kunfehértó",
+    "lat": 46.362396,
+    "lon": 19.4132799
+  },
+  {
+    "name": "Horgásztó",
+    "location": "Inke",
+    "lat": 46.3947291,
+    "lon": 17.1994768
+  },
+  {
+    "name": "Horgásztó",
+    "location": "Kéty",
+    "lat": 46.4403964,
+    "lon": 18.5177398
+  },
+  {
+    "name": "Horgásztó",
+    "location": "Márok",
+    "lat": 45.8780921,
+    "lon": 18.5045036
+  },
+  {
+    "name": "Horgásztó",
+    "location": "Mecseknádasd",
+    "lat": 46.2244052,
+    "lon": 18.4645171
+  },
+  {
+    "name": "Horgásztó",
+    "location": "Olasz",
+    "lat": 46.0151645,
+    "lon": 18.411796
+  },
+  {
+    "name": "Horgásztó",
+    "location": "Szárász",
+    "lat": 46.3488336,
+    "lon": 18.3725516
+  },
+  {
+    "name": "Horgásztó",
+    "location": "Szulok",
+    "lat": 46.0505352,
+    "lon": 17.5507953
+  },
+  {
+    "name": "Horgásztó",
+    "location": "Kétbodony",
+    "lat": 47.9354371,
+    "lon": 19.284937
+  },
+  {
+    "name": "Horgásztó",
+    "location": "Földeák",
+    "lat": 46.3193341,
+    "lon": 20.4932376
+  },
+  {
+    "name": "Horgásztó",
+    "location": "Pitvaros",
+    "lat": 46.3213012,
+    "lon": 20.7361518
+  },
+  {
+    "name": "Horgásztó",
+    "location": "Somogyhatvan",
+    "lat": 46.1096118,
+    "lon": 17.7130792
+  },
+  {
+    "name": "Horgásztó",
+    "location": "Bogács",
+    "lat": 47.9041176,
+    "lon": 20.5314509
+  },
+  {
+    "name": "Horgásztó",
+    "location": "Szólád",
+    "lat": 46.786529,
+    "lon": 17.8395303
+  },
+  {
+    "name": "Horgásztó",
+    "location": "Almásháza",
+    "lat": 46.8425257,
+    "lon": 17.0473307
+  },
+  {
+    "name": "Horgásztó",
+    "location": "Súr",
+    "lat": 47.3724321,
+    "lon": 18.0297393
+  },
+  {
+    "name": "Horgásztó",
+    "location": "Vámosszabadi",
+    "lat": 47.7529429,
+    "lon": 17.6486876
+  },
+  {
+    "name": "Horgásztó",
+    "location": "Bicsérd",
+    "lat": 46.0225603,
+    "lon": 18.0815466
+  },
+  {
+    "name": "Horgásztó",
+    "location": "Baksa",
+    "lat": 45.9595045,
+    "lon": 18.0950419
+  },
+  {
+    "name": "Horgásztó",
+    "location": "Hobol",
+    "lat": 46.0243248,
+    "lon": 17.7774257
+  },
+  {
+    "name": "Horgony Horgásztó",
+    "location": "Szalánta",
+    "lat": 45.9473169,
+    "lon": 18.2373967
+  },
+  {
+    "name": "Hosszú-tó",
+    "location": "Drávacsepely",
+    "lat": 45.8284594,
+    "lon": 18.1366185
+  },
+  {
+    "name": "Ingvár-tó",
+    "location": "Monok",
+    "lat": 48.2121842,
+    "lon": 21.1497677
+  },
+  {
+    "name": "Inota 30 Horgásztó",
+    "location": "Várpalota",
+    "lat": 47.2006176,
+    "lon": 18.1399782
+  },
+  {
+    "name": "Iping Horgásztó",
+    "location": "Kapuvár",
+    "lat": 47.5936871,
+    "lon": 17.0274744
+  },
+  {
+    "name": "Irmapusztai Horgásztó",
+    "location": "Balatonlelle",
+    "lat": 46.7867617,
+    "lon": 17.6965209
+  },
+  {
+    "name": "Iszapoló-tó",
+    "location": "Szálka",
+    "lat": 46.2773672,
+    "lon": 18.6372014
+  },
+  {
+    "name": "Ivacsi horgásztó",
+    "location": "Veresegyház",
+    "lat": 47.655235,
+    "lon": 19.2868815
+  },
+  {
+    "name": "Ivánbattyáni tavak",
+    "location": "Ivánbattyán",
+    "lat": 45.9075657,
+    "lon": 18.4179693
+  },
+  {
+    "name": "Jakabka Horgásztó",
+    "location": "Sződ",
+    "lat": 47.7191669,
+    "lon": 19.1819507
+  },
+  {
+    "name": "Jászjákóhalmi horgásztó",
+    "location": "Jászjákóhalma",
+    "lat": 47.5219388,
+    "lon": 19.9891136
+  },
+  {
+    "name": "Jóléti-tó",
+    "location": "Újlőrincfalva",
+    "lat": 47.6260626,
+    "lon": 20.5985459
+  },
+  {
+    "name": "Jonathermal horgásztó",
+    "location": "Kiskunmajsa",
+    "lat": 46.4906228,
+    "lon": 19.7393121
+  },
+  {
+    "name": "Jurta-tó",
+    "location": "Szanda",
+    "lat": 47.9278532,
+    "lon": 19.4404136
+  },
+  {
+    "name": "Kacsa-tó",
+    "location": "Gávavencsellő",
+    "lat": 48.161011,
+    "lon": 21.5934119
+  },
+  {
+    "name": "Kákástó Horászpark",
+    "location": "Törtel",
+    "lat": 47.1208483,
+    "lon": 19.9350507
+  },
+  {
+    "name": "Kaposfői horgásztó",
+    "location": "Kaposfő",
+    "lat": 46.3618336,
+    "lon": 17.6698386
+  },
+  {
+    "name": "Karszt-horgásztó",
+    "location": "Várpalota",
+    "lat": 47.2006176,
+    "lon": 18.1399782
+  },
+  {
+    "name": "Kastély Horgásztó",
+    "location": "Nagymágocs",
+    "lat": 46.5834517,
+    "lon": 20.4811682
+  },
+  {
+    "name": "Katymári Batinkov-tó",
+    "location": "Katymár",
+    "lat": 46.0345287,
+    "lon": 19.2098709
+  },
+  {
+    "name": "Kavicsbánya-tó",
+    "location": "Abda",
+    "lat": 47.6976818,
+    "lon": 17.5409829
+  },
+  {
+    "name": "Kavicsbányató",
+    "location": "Almásfüzitő",
+    "lat": 47.7272163,
+    "lon": 18.2619857
+  },
+  {
+    "name": "Kavicsos-tó",
+    "location": "Szigetszentmiklós",
+    "lat": 47.345765,
+    "lon": 19.0409037
+  },
+  {
+    "name": "Kecskeméti Záportározó-tó",
+    "location": "Kecskemét",
+    "lat": 46.9073883,
+    "lon": 19.6917206
+  },
+  {
+    "name": "Kecskéscsárdai Lápipóc-tó",
+    "location": "Cegléd",
+    "lat": 47.1716447,
+    "lon": 19.7977516
+  },
+  {
+    "name": "Kék-tó",
+    "location": "Baja",
+    "lat": 46.1785471,
+    "lon": 18.9517255
+  },
+  {
+    "name": "Kékesi-tó",
+    "location": "Harta",
+    "lat": 46.6947199,
+    "lon": 19.0277119
+  },
+  {
+    "name": "Keleti főcsatorna",
+    "location": "Hajdúnánás",
+    "lat": 47.8452241,
+    "lon": 21.4279002
+  },
+  {
+    "name": "Kenderáztató-tó",
+    "location": "Apagy",
+    "lat": 47.9593892,
+    "lon": 21.9348469
+  },
+  {
+    "name": "Kenderföldi-tó",
+    "location": "Kecel",
+    "lat": 46.5237655,
+    "lon": 19.2533387
+  },
+  {
+    "name": "Kenyérgyári-holtág",
+    "location": "Tiszalök",
+    "lat": 48.0171761,
+    "lon": 21.3749662
+  },
+  {
+    "name": "Keramit tórendszer",
+    "location": "Szeged",
+    "lat": 46.2546312,
+    "lon": 20.1486016
+  },
+  {
+    "name": "Kertalja-horgásztó",
+    "location": "Kovácshida",
+    "lat": 45.8337328,
+    "lon": 18.181049
+  },
+  {
+    "name": "Kétegyházi homokbányató",
+    "location": "Kétegyháza",
+    "lat": 46.5455442,
+    "lon": 21.1856277
+  },
+  {
+    "name": "Kéthelyi Bányató",
+    "location": "Kéthely",
+    "lat": 46.6469444,
+    "lon": 17.3933315
+  },
+  {
+    "name": "Kétsopronyi homokbányató",
+    "location": "Kétsoprony",
+    "lat": 46.7191754,
+    "lon": 20.883979
+  },
+  {
+    "name": "Kevermesi Sóderbánya-tavak",
+    "location": "Kevermes",
+    "lat": 46.417206,
+    "lon": 21.1843082
+  },
+  {
+    "name": "Kígyós-tó",
+    "location": "Bácsalmás",
+    "lat": 46.1274127,
+    "lon": 19.3319128
+  },
+  {
+    "name": "Király-tó",
+    "location": "Eperjes",
+    "lat": 46.7100842,
+    "lon": 20.5609031
+  },
+  {
+    "name": "Királyréti horgásztó",
+    "location": "Szokolya",
+    "lat": 47.8667937,
+    "lon": 19.0089279
+  },
+  {
+    "name": "Kirva-lapos horgásztó",
+    "location": "Kocsord",
+    "lat": 47.9390852,
+    "lon": 22.3869911
+  },
+  {
+    "name": "Kis kavicsbányató",
+    "location": "Öttevény",
+    "lat": 47.7250055,
+    "lon": 17.4885276
+  },
+  {
+    "name": "Kis-Sajó (Ős-Bódva meder)",
+    "location": "Boldva",
+    "lat": 48.217181,
+    "lon": 20.7884169
+  },
+  {
+    "name": "Kis-tó",
+    "location": "Nagykálló",
+    "lat": 47.874296,
+    "lon": 21.8434965
+  },
+  {
+    "name": "Kistokaji-bányató",
+    "location": "Kistokaj",
+    "lat": 48.0399821,
+    "lon": 20.8403681
+  },
+  {
+    "name": "Kistolmácsi-víztározó",
+    "location": "Kistolmács",
+    "lat": 46.4853181,
+    "lon": 16.7527575
+  },
+  {
+    "name": "Klágya I.",
+    "location": "Hercegszántó",
+    "lat": 45.950602,
+    "lon": 18.93584
+  },
+  {
+    "name": "Kobolya-tó",
+    "location": "Géderlak",
+    "lat": 46.6085156,
+    "lon": 18.9140472
+  },
+  {
+    "name": "Kollátszegi kavicsbányatavak",
+    "location": "Murakeresztúr",
+    "lat": 46.3621205,
+    "lon": 16.8817902
+  },
+  {
+    "name": "Komravölgyi tározó",
+    "location": "Mihálygerge",
+    "lat": 48.1951964,
+    "lon": 19.6341042
+  },
+  {
+    "name": "Kormorán kikötő",
+    "location": "Tiszafüred",
+    "lat": 47.6130877,
+    "lon": 20.7502258
+  },
+  {
+    "name": "Környei-tó",
+    "location": "Környe",
+    "lat": 47.5475792,
+    "lon": 18.3318516
+  },
+  {
+    "name": "Kórógy-ér",
+    "location": "Szegvár",
+    "lat": 46.5851274,
+    "lon": 20.221903
+  },
+  {
+    "name": "Kostök-Holtág",
+    "location": "Fülöpszállás",
+    "lat": 46.8200875,
+    "lon": 19.2395832
+  },
+  {
+    "name": "Kotró",
+    "location": "Gyékényes",
+    "lat": 46.2371661,
+    "lon": 17.0090208
+  },
+  {
+    "name": "Kovácsi Holt-Tisza",
+    "location": "Nagykörű",
+    "lat": 47.2742815,
+    "lon": 20.4483722
+  },
+  {
+    "name": "Kovácsszénájai-tó",
+    "location": "Kovácsszénája",
+    "lat": 46.1720999,
+    "lon": 18.1092839
+  },
+  {
+    "name": "Kraszna folyó",
+    "location": "Mérk",
+    "lat": 47.781955,
+    "lon": 22.3783349
+  },
+  {
+    "name": "Kráter-tó",
+    "location": "Nagyhegyes",
+    "lat": 47.5385142,
+    "lon": 21.3465888
+  },
+  {
+    "name": "Kurca",
+    "location": "Szentes",
+    "lat": 46.6524049,
+    "lon": 20.2566408
+  },
+  {
+    "name": "Kurityán bányató",
+    "location": "Kurityán",
+    "lat": 48.3101976,
+    "lon": 20.6258433
+  },
+  {
+    "name": "Kustánszegi horgásztó",
+    "location": "Kustánszeg",
+    "lat": 46.785332,
+    "lon": 16.6798925
+  },
+  {
+    "name": "Kutas halastó",
+    "location": "Kutas",
+    "lat": 46.3320657,
+    "lon": 17.4530309
+  },
+  {
+    "name": "Lak-völgyi tó",
+    "location": "Bélapátfalva",
+    "lat": 48.0517179,
+    "lon": 20.3448732
+  },
+  {
+    "name": "Lakitelki-tőzegbányatavak",
+    "location": "Lakitelek",
+    "lat": 46.8736335,
+    "lon": 20.0003712
+  },
+  {
+    "name": "Látványtó",
+    "location": "Sajtoskál",
+    "lat": 47.4032813,
+    "lon": 16.8539365
+  },
+  {
+    "name": "Lázbérci víztározó",
+    "location": "Dédestapolcsány",
+    "lat": 48.1807927,
+    "lon": 20.484227
+  },
+  {
+    "name": "Lencsés Horgásztó",
+    "location": "Szeged",
+    "lat": 46.2546312,
+    "lon": 20.1486016
+  },
+  {
+    "name": "Lőrincz-tó",
+    "location": "Pálmonostora",
+    "lat": 46.6264137,
+    "lon": 19.9443532
+  },
+  {
+    "name": "Lőrintei víztározó",
+    "location": "Ajka",
+    "lat": 47.1056579,
+    "lon": 17.5587276
+  },
+  {
+    "name": "Lukács-tó",
+    "location": "Kétegyháza",
+    "lat": 46.5455442,
+    "lon": 21.1856277
+  },
+  {
+    "name": "Maconkai víztározó",
+    "location": "Bátonyterenye",
+    "lat": 47.9955532,
+    "lon": 19.8272105
+  },
+  {
+    "name": "Madarász-tó",
+    "location": "Mórahalom",
+    "lat": 46.2163238,
+    "lon": 19.8894811
+  },
+  {
+    "name": "Magdolna horgásztó",
+    "location": "Tápiószecső",
+    "lat": 47.4506254,
+    "lon": 19.6077248
+  },
+  {
+    "name": "Magyarszecsődi kavicsbányató",
+    "location": "Magyarszecsőd",
+    "lat": 47.0363937,
+    "lon": 16.6499156
+  },
+  {
+    "name": "Majki tó",
+    "location": "Oroszlány",
+    "lat": 47.4897011,
+    "lon": 18.3148401
+  },
+  {
+    "name": "Majláthpusztai-tó",
+    "location": "Kisszentmárton",
+    "lat": 45.823917,
+    "lon": 18.0236928
+  },
+  {
+    "name": "Majsi halastó",
+    "location": "Majs",
+    "lat": 45.9087344,
+    "lon": 18.600301
+  },
+  {
+    "name": "Malom-tó",
+    "location": "Ács",
+    "lat": 47.7104229,
+    "lon": 18.0156133
+  },
+  {
+    "name": "Malom-tó",
+    "location": "Albertirsa",
+    "lat": 47.2457295,
+    "lon": 19.6127835
+  },
+  {
+    "name": "Malom-tó / Tóstrand",
+    "location": "Veresegyház",
+    "lat": 47.655235,
+    "lon": 19.2868815
+  },
+  {
+    "name": "Malomvölgyi-tó",
+    "location": "Pécs",
+    "lat": 46.0765092,
+    "lon": 18.2280317
+  },
+  {
+    "name": "Markazi víztározó",
+    "location": "Markaz",
+    "lat": 47.8266709,
+    "lon": 20.0547595
+  },
+  {
+    "name": "Maróci-tó",
+    "location": "Maróc",
+    "lat": 46.5483938,
+    "lon": 16.6651667
+  },
+  {
+    "name": "Mártélyi Holt-Tisza",
+    "location": "Mártély",
+    "lat": 46.468773,
+    "lon": 20.238383
+  },
+  {
+    "name": "Mátételki horgásztó",
+    "location": "Mátételke",
+    "lat": 46.1650499,
+    "lon": 19.274404
+  },
+  {
+    "name": "Mátravidéki Erőmű-tó",
+    "location": "Lőrinci",
+    "lat": 47.7400504,
+    "lon": 19.6773099
+  },
+  {
+    "name": "Mátravíz Horgásztó",
+    "location": "Mezőtárkány",
+    "lat": 47.7218712,
+    "lon": 20.4760816
+  },
+  {
+    "name": "Mattyi-tó",
+    "location": "Matty",
+    "lat": 45.7933982,
+    "lon": 18.2633066
+  },
+  {
+    "name": "Maty-éri víztározó",
+    "location": "Szeged",
+    "lat": 46.2546312,
+    "lon": 20.1486016
+  },
+  {
+    "name": "Mátyusi Rózsás holtág",
+    "location": "Mátyus",
+    "lat": 48.2831601,
+    "lon": 22.2823276
+  },
+  {
+    "name": "Mecsekpölöskei horgásztó",
+    "location": "Mecsekpölöske",
+    "lat": 46.2228598,
+    "lon": 18.2111234
+  },
+  {
+    "name": "Ménes-tó",
+    "location": "Szögliget",
+    "lat": 48.5236809,
+    "lon": 20.6743042
+  },
+  {
+    "name": "Merenyei horgásztó",
+    "location": "Merenye",
+    "lat": 46.069745,
+    "lon": 17.6984759
+  },
+  {
+    "name": "Merseváti tőzegbányató",
+    "location": "Mersevát",
+    "lat": 47.289461,
+    "lon": 17.2049535
+  },
+  {
+    "name": "Mezőkovácsházi homokbányató",
+    "location": "Mezőkovácsháza",
+    "lat": 46.4073383,
+    "lon": 20.9236006
+  },
+  {
+    "name": "Miháldi Horgásztó",
+    "location": "Miháld",
+    "lat": 46.4489148,
+    "lon": 17.1270994
+  },
+  {
+    "name": "Millér Horgásztó",
+    "location": "Szolnok",
+    "lat": 47.1753833,
+    "lon": 20.1946279
+  },
+  {
+    "name": "Miszlai-tó",
+    "location": "Miszla",
+    "lat": 46.6314672,
+    "lon": 18.4834395
+  },
+  {
+    "name": "Moby Dick Horgásztó",
+    "location": "Dunavarsány",
+    "lat": 47.2789632,
+    "lon": 19.0661045
+  },
+  {
+    "name": "Mókus Horgásztó",
+    "location": "Fürged",
+    "lat": 46.7213979,
+    "lon": 18.3096567
+  },
+  {
+    "name": "Mosoni-Duna",
+    "location": "Győr",
+    "lat": 47.687609,
+    "lon": 17.6346815
+  },
+  {
+    "name": "Mosonszolnoki Kisbányató",
+    "location": "Mosonszolnok",
+    "lat": 47.8527584,
+    "lon": 17.1741402
+  },
+  {
+    "name": "Mosonszolnoki Nagybányató",
+    "location": "Mosonszolnok",
+    "lat": 47.8527584,
+    "lon": 17.1741402
+  },
+  {
+    "name": "Mrtvica-tó",
+    "location": "Felsőszentmárton",
+    "lat": 45.8522747,
+    "lon": 17.705455
+  },
+  {
+    "name": "Müller horgásztó",
+    "location": "Szeged",
+    "lat": 46.2546312,
+    "lon": 20.1486016
+  },
+  {
+    "name": "Mura Ponty-tavak",
+    "location": "Muraszemenye",
+    "lat": 46.4762416,
+    "lon": 16.624633
+  },
+  {
+    "name": "Nábrádi Horgásztó",
+    "location": "Nábrád",
+    "lat": 48.0052679,
+    "lon": 22.4464114
+  },
+  {
+    "name": "Nádaspart Horgásztó",
+    "location": "Hajdúszoboszló",
+    "lat": 47.4431291,
+    "lon": 21.3902995
+  },
+  {
+    "name": "Nágocsi Horgásztó",
+    "location": "Nágocs",
+    "lat": 46.6645895,
+    "lon": 17.9539656
+  },
+  {
+    "name": "Nagy kavicsbányató",
+    "location": "Öttevény",
+    "lat": 47.7250055,
+    "lon": 17.4885276
+  },
+  {
+    "name": "Nagy-Morotva",
+    "location": "Rakamaz",
+    "lat": 48.12218,
+    "lon": 21.4775144
+  },
+  {
+    "name": "Nagy-Morotva",
+    "location": "Tiszanagyfalu",
+    "lat": 48.0935241,
+    "lon": 21.4705176
+  },
+  {
+    "name": "Nagy-tó",
+    "location": "Atkár",
+    "lat": 47.7196216,
+    "lon": 19.8901629
+  },
+  {
+    "name": "Nagybörzsönyi Víztározó",
+    "location": "Nagybörzsöny",
+    "lat": 47.9360037,
+    "lon": 18.8243865
+  },
+  {
+    "name": "Nagyhomokos-tó",
+    "location": "Jászapáti",
+    "lat": 47.5137235,
+    "lon": 20.1404245
+  },
+  {
+    "name": "Nagyigmándi víztározó",
+    "location": "Nagyigmánd",
+    "lat": 47.6350173,
+    "lon": 18.076194
+  },
+  {
+    "name": "Nagykanizsai Csónakázó-tó",
+    "location": "Nagykanizsa",
+    "lat": 46.4548261,
+    "lon": 16.9923923
+  },
+  {
+    "name": "Nagymágocsi horgásztó",
+    "location": "Nagymágocs",
+    "lat": 46.5834517,
+    "lon": 20.4811682
+  },
+  {
+    "name": "Nagypiriti kavicsbányató",
+    "location": "Nagypirit",
+    "lat": 47.2003219,
+    "lon": 17.2253537
+  },
+  {
+    "name": "Nagyrédei-víztározó",
+    "location": "Nagyréde",
+    "lat": 47.7654882,
+    "lon": 19.8503473
+  },
+  {
+    "name": "Nagyteveli-tó",
+    "location": "Nagytevel",
+    "lat": 47.296411,
+    "lon": 17.5654838
+  },
+  {
+    "name": "Nagytopa Horgásztó",
+    "location": "Kőtelek",
+    "lat": 47.3320779,
+    "lon": 20.4429892
+  },
+  {
+    "name": "Nagyvátyi-tó",
+    "location": "Nagyváty",
+    "lat": 46.059924,
+    "lon": 17.9315911
+  },
+  {
+    "name": "Néveri Horgásztó",
+    "location": "Békéscsaba",
+    "lat": 46.6798003,
+    "lon": 21.0985425
+  },
+  {
+    "name": "Nőtincs Horgásztó",
+    "location": "Nőtincs",
+    "lat": 47.8821597,
+    "lon": 19.1404797
+  },
+  {
+    "name": "Nyirádi horgásztó",
+    "location": "Nyirád",
+    "lat": 47.0056272,
+    "lon": 17.4545943
+  },
+  {
+    "name": "Nyírjesi tavak",
+    "location": "Balassagyarmat",
+    "lat": 48.0768832,
+    "lon": 19.2926037
+  },
+  {
+    "name": "Nyírturai horgásztó",
+    "location": "Nyírtura",
+    "lat": 48.014414,
+    "lon": 21.8333843
+  },
+  {
+    "name": "Ölbői kavicsbányató",
+    "location": "Ölbő",
+    "lat": 47.3003902,
+    "lon": 16.8619641
+  },
+  {
+    "name": "Ölbői-tó",
+    "location": "Tárkány",
+    "lat": 47.5900913,
+    "lon": 18.0017805
+  },
+  {
+    "name": "Ordas-tavak",
+    "location": "Csörög",
+    "lat": 47.7344093,
+    "lon": 19.1904009
+  },
+  {
+    "name": "Öreg-tó",
+    "location": "Bokod",
+    "lat": 47.4934128,
+    "lon": 18.2420786
+  },
+  {
+    "name": "Öregpotyka-tavak",
+    "location": "Ludányhalászi",
+    "lat": 48.1346794,
+    "lon": 19.5242934
+  },
+  {
+    "name": "Orfűi-tó",
+    "location": "Orfű",
+    "lat": 46.1380554,
+    "lon": 18.1551995
+  },
+  {
+    "name": "Ormosbányai bányatavak",
+    "location": "Ormosbánya",
+    "lat": 48.3361933,
+    "lon": 20.6482777
+  },
+  {
+    "name": "Orosházi Béke homokbánya horgásztó",
+    "location": "Orosháza",
+    "lat": 46.5603339,
+    "lon": 20.6693477
+  },
+  {
+    "name": "Őrszentmiklósi víztározó",
+    "location": "Őrbottyán",
+    "lat": 47.6827581,
+    "lon": 19.263848
+  },
+  {
+    "name": "Ősláp",
+    "location": "Őr",
+    "lat": 47.9762539,
+    "lon": 22.1834097
+  },
+  {
+    "name": "Őszeszéki-tó",
+    "location": "Balástya",
+    "lat": 46.42333,
+    "lon": 20.0092202
+  },
+  {
+    "name": "Őzetanya Horgásztó",
+    "location": "Székely",
+    "lat": 48.0598465,
+    "lon": 21.936369
+  },
+  {
+    "name": "Paksi Kondor- és Füzes-tavak",
+    "location": "Paks",
+    "lat": 46.6229468,
+    "lon": 18.8589364
+  },
+  {
+    "name": "Paksi-Duna Atomerőmű alatti szakasz",
+    "location": "Paks",
+    "lat": 46.6229468,
+    "lon": 18.8589364
+  },
+  {
+    "name": "Palatinus-tó",
+    "location": "Esztergom",
+    "lat": 47.7856939,
+    "lon": 18.7403377
+  },
+  {
+    "name": "Palotási horgásztó",
+    "location": "Palotás",
+    "lat": 47.7954248,
+    "lon": 19.5955271
+  },
+  {
+    "name": "Palotavárosi horgásztavak",
+    "location": "Székesfehérvár",
+    "lat": 47.1910169,
+    "lon": 18.410811
+  },
+  {
+    "name": "Pamut-tó",
+    "location": "Veresegyház",
+    "lat": 47.655235,
+    "lon": 19.2868815
+  },
+  {
+    "name": "Park Horgásztó",
+    "location": "Isaszeg",
+    "lat": 47.5303335,
+    "lon": 19.4017001
+  },
+  {
+    "name": "Park-tó",
+    "location": "Tengelic",
+    "lat": 46.5319473,
+    "lon": 18.7108467
+  },
+  {
+    "name": "Park-tó",
+    "location": "Kisbér",
+    "lat": 47.4992603,
+    "lon": 18.0300173
+  },
+  {
+    "name": "Park-tó",
+    "location": "Dég",
+    "lat": 46.8727995,
+    "lon": 18.4477565
+  },
+  {
+    "name": "Pátkai horgásztó",
+    "location": "Pátka",
+    "lat": 47.2770976,
+    "lon": 18.4870991
+  },
+  {
+    "name": "Patkó-tó",
+    "location": "Szerecseny",
+    "lat": 47.4619347,
+    "lon": 17.5547417
+  },
+  {
+    "name": "Pazderjás-tó",
+    "location": "Kaposszerdahely",
+    "lat": 46.3225756,
+    "lon": 17.7557476
+  },
+  {
+    "name": "Peca-tó",
+    "location": "Biatorbágy",
+    "lat": 47.4739442,
+    "lon": 18.8232855
+  },
+  {
+    "name": "Pék-tó",
+    "location": "Tabdi",
+    "lat": 46.6846564,
+    "lon": 19.3077169
+  },
+  {
+    "name": "Pellérdi horgásztó",
+    "location": "Pellérd",
+    "lat": 46.0348577,
+    "lon": 18.153296
+  },
+  {
+    "name": "Peremvárosi Horgásztó és Pihenőpark",
+    "location": "Gyál",
+    "lat": 47.3845453,
+    "lon": 19.2173066
+  },
+  {
+    "name": "Perenyei horgásztó",
+    "location": "Perenye",
+    "lat": 47.2930495,
+    "lon": 16.5738566
+  },
+  {
+    "name": "Perint Patak",
+    "location": "Szombathely",
+    "lat": 47.2291184,
+    "lon": 16.6187625
+  },
+  {
+    "name": "Petörke-tó",
+    "location": "Bárdudvarnok",
+    "lat": 46.3268032,
+    "lon": 17.6850898
+  },
+  {
+    "name": "Pikkelyhalom horgásztó",
+    "location": "Aldebrő",
+    "lat": 47.7891553,
+    "lon": 20.2283743
+  },
+  {
+    "name": "Pilisszentiváni bányató",
+    "location": "Pilisszentiván",
+    "lat": 47.6095461,
+    "lon": 18.8969359
+  },
+  {
+    "name": "Pilisvörösvári bányatavak",
+    "location": "Pilisvörösvár",
+    "lat": 47.6210817,
+    "lon": 18.9115754
+  },
+  {
+    "name": "Pinka Patak",
+    "location": "Pornóapáti",
+    "lat": 47.1560615,
+    "lon": 16.4658887
+  },
+  {
+    "name": "Pinka Patak",
+    "location": "Vaskeresztes",
+    "lat": 47.1939865,
+    "lon": 16.4486687
+  },
+  {
+    "name": "Piroska-tó",
+    "location": "Nagylók",
+    "lat": 46.975953,
+    "lon": 18.6422324
+  },
+  {
+    "name": "Pisztrángos-tó",
+    "location": "Németbánya",
+    "lat": 47.2147128,
+    "lon": 17.6465684
+  },
+  {
+    "name": "Pogányi-tó",
+    "location": "Pogány",
+    "lat": 45.9841107,
+    "lon": 18.2604675
+  },
+  {
+    "name": "Pölöskei-tó",
+    "location": "Pölöske",
+    "lat": 46.7550715,
+    "lon": 16.924252
+  },
+  {
+    "name": "Pontyfészek Sporthorgásztó",
+    "location": "Simontornya",
+    "lat": 46.756962,
+    "lon": 18.5435129
+  },
+  {
+    "name": "Pötrétei Horgásztavak",
+    "location": "Pötréte",
+    "lat": 46.6782671,
+    "lon": 16.9509894
+  },
+  {
+    "name": "Préri Horgásztó",
+    "location": "Dömsöd",
+    "lat": 47.094771,
+    "lon": 19.0070461
+  },
+  {
+    "name": "Priszpa-tó",
+    "location": "Madaras",
+    "lat": 46.0571305,
+    "lon": 19.2598668
+  },
+  {
+    "name": "Püspökmolnári kavicsbányató",
+    "location": "Püspökmolnári",
+    "lat": 47.0909745,
+    "lon": 16.7964636
+  },
+  {
+    "name": "Pusztaszentlászlói Horgásztó",
+    "location": "Pusztaszentlászló",
+    "lat": 46.6360385,
+    "lon": 16.8375875
+  },
+  {
+    "name": "Putnoki-tó",
+    "location": "Putnok",
+    "lat": 48.2942607,
+    "lon": 20.4342869
+  },
+  {
+    "name": "Rába",
+    "location": "Szentgotthárd",
+    "lat": 46.9528507,
+    "lon": 16.2748541
+  },
+  {
+    "name": "Rába folyó",
+    "location": "Alsószölnök",
+    "lat": 46.9265739,
+    "lon": 16.2027694
+  },
+  {
+    "name": "Rába folyó",
+    "location": "Csörötnek",
+    "lat": 46.9516895,
+    "lon": 16.3654918
+  },
+  {
+    "name": "Rábasömjéni-tó",
+    "location": "Sárvár",
+    "lat": 47.2517426,
+    "lon": 16.9342165
+  },
+  {
+    "name": "Ráckevei-Soroksári Duna-ág (Kis-Duna)",
+    "location": "Ráckeve",
+    "lat": 47.1609765,
+    "lon": 18.9436266
+  },
+  {
+    "name": "Rakaca-víztározó",
+    "location": "Meszes",
+    "lat": 48.4386641,
+    "lon": 20.796003
+  },
+  {
+    "name": "Rakacai-tó",
+    "location": "Szalonna",
+    "lat": 48.4472052,
+    "lon": 20.739375
+  },
+  {
+    "name": "Ráksi-tó",
+    "location": "Ráksi",
+    "lat": 46.5129019,
+    "lon": 17.9219292
+  },
+  {
+    "name": "Rétközi-tó",
+    "location": "Szabolcsveresmart",
+    "lat": 48.2924404,
+    "lon": 22.019809
+  },
+  {
+    "name": "Rézparti víztározó",
+    "location": "Magyarnándor",
+    "lat": 47.9675683,
+    "lon": 19.3487659
+  },
+  {
+    "name": "Rinyaszentkirályi Horgásztó",
+    "location": "Rinyaszentkirály",
+    "lat": 46.1529179,
+    "lon": 17.3889437
+  },
+  {
+    "name": "Robinson-szigetek",
+    "location": "Szécsény",
+    "lat": 48.0802507,
+    "lon": 19.5206814
+  },
+  {
+    "name": "Római-tó",
+    "location": "Tata",
+    "lat": 47.6516214,
+    "lon": 18.3282083
+  },
+  {
+    "name": "Rücker Bányató",
+    "location": "Pécs",
+    "lat": 46.0765092,
+    "lon": 18.2280317
+  },
+  {
+    "name": "Rüdiger-tó",
+    "location": "Komárom",
+    "lat": 47.7417349,
+    "lon": 18.1218256
+  },
+  {
+    "name": "Sajó",
+    "location": "Tiszaújváros",
+    "lat": 47.9280341,
+    "lon": 21.0467056
+  },
+  {
+    "name": "Sajókeresztúri bányatavak",
+    "location": "Sajókeresztúr",
+    "lat": 48.1696732,
+    "lon": 20.7761614
+  },
+  {
+    "name": "Sándorfalvi Nádastó és Szabadidőpark",
+    "location": "Sándorfalva",
+    "lat": 46.3657365,
+    "lon": 20.1042174
+  },
+  {
+    "name": "Sarádi horgásztó",
+    "location": "Vásárosdombó",
+    "lat": 46.305546,
+    "lon": 18.132263
+  },
+  {
+    "name": "Sárvíz-tó",
+    "location": "Gersekarát",
+    "lat": 46.979902,
+    "lon": 16.7434698
+  },
+  {
+    "name": "Sebes-Körös",
+    "location": "Újiráz",
+    "lat": 46.9850442,
+    "lon": 21.3534102
+  },
+  {
+    "name": "Sikondai Tavak",
+    "location": "Komló",
+    "lat": 46.1911673,
+    "lon": 18.2613778
+  },
+  {
+    "name": "Síkvölgyi I-II. tavak",
+    "location": "Tatabánya",
+    "lat": 47.583845,
+    "lon": 18.3979855
+  },
+  {
+    "name": "Sinkár-tó",
+    "location": "Acsa",
+    "lat": 47.7925337,
+    "lon": 19.386298
+  },
+  {
+    "name": "Siójut Horgásztó",
+    "location": "Siójut",
+    "lat": 46.8794113,
+    "lon": 18.1387818
+  },
+  {
+    "name": "Siratói holtág",
+    "location": "Békésszentandrás",
+    "lat": 46.8717052,
+    "lon": 20.4851283
+  },
+  {
+    "name": "Smaragdvölgy Pihenő Park",
+    "location": "Sátoraljaújhely",
+    "lat": 48.3960978,
+    "lon": 21.6561497
+  },
+  {
+    "name": "Sombereki Horgásztó",
+    "location": "Somberek",
+    "lat": 46.0809593,
+    "lon": 18.6605462
+  },
+  {
+    "name": "Somlyó-tó",
+    "location": "Fót",
+    "lat": 47.6125871,
+    "lon": 19.1980105
+  },
+  {
+    "name": "Somogyfajszi víztározó",
+    "location": "Somogyfajsz",
+    "lat": 46.5023272,
+    "lon": 17.5687406
+  },
+  {
+    "name": "Somogysárdi tavak",
+    "location": "Somogysárd",
+    "lat": 46.4120262,
+    "lon": 17.5967699
+  },
+  {
+    "name": "Somogyudvarhelyi kavicsbányatavak",
+    "location": "Somogyudvarhely",
+    "lat": 46.1773427,
+    "lon": 17.1909701
+  },
+  {
+    "name": "Sóstói tavak",
+    "location": "Nyíregyháza",
+    "lat": 47.9557802,
+    "lon": 21.7167982
+  },
+  {
+    "name": "Sötétvölgyi horgásztó",
+    "location": "Kakasd",
+    "lat": 46.3462709,
+    "lon": 18.5927004
+  },
+  {
+    "name": "Stettni-tó",
+    "location": "Hegyeshalom",
+    "lat": 47.9144882,
+    "lon": 17.1558011
+  },
+  {
+    "name": "Strandi Horgásztó",
+    "location": "Pápa",
+    "lat": 47.3261087,
+    "lon": 17.4705293
+  },
+  {
+    "name": "Süllős bányató",
+    "location": "Milota",
+    "lat": 48.1035853,
+    "lon": 22.7803098
+  },
+  {
+    "name": "Surdi Park-tó",
+    "location": "Surd",
+    "lat": 46.3180641,
+    "lon": 16.9688834
+  },
+  {
+    "name": "Suszti Horgásztó",
+    "location": "Okány",
+    "lat": 46.8975103,
+    "lon": 21.3494563
+  },
+  {
+    "name": "Szabadidő Park-Horgász tavak",
+    "location": "Máriapócs",
+    "lat": 47.8793156,
+    "lon": 22.0258708
+  },
+  {
+    "name": "Szabics Kikötő",
+    "location": "Tiszafüred",
+    "lat": 47.6130877,
+    "lon": 20.7502258
+  },
+  {
+    "name": "Szajki tavak Strand",
+    "location": "Hosszúpereszteg",
+    "lat": 47.0955027,
+    "lon": 17.0231836
+  },
+  {
+    "name": "Szajoli Holt-Tisza",
+    "location": "Szajol",
+    "lat": 47.1757484,
+    "lon": 20.3006435
+  },
+  {
+    "name": "Szakáts-kerti horgásztó",
+    "location": "Göd",
+    "lat": 47.6834336,
+    "lon": 19.1341568
+  },
+  {
+    "name": "Szanki Horgásztó és Pihenőpark",
+    "location": "Szank",
+    "lat": 46.5544858,
+    "lon": 19.6689973
+  },
+  {
+    "name": "Szászvári horgásztó",
+    "location": "Szászvár",
+    "lat": 46.2744086,
+    "lon": 18.3783088
+  },
+  {
+    "name": "Szatmári-tó",
+    "location": "Nyíregyháza",
+    "lat": 47.9557802,
+    "lon": 21.7167982
+  },
+  {
+    "name": "Szavanna horgásztó",
+    "location": "Alsónémedi",
+    "lat": 47.3146713,
+    "lon": 19.165704
+  },
+  {
+    "name": "Szecska-tó",
+    "location": "Bonyhád",
+    "lat": 46.2984212,
+    "lon": 18.532191
+  },
+  {
+    "name": "Szedresi-tó (Holt Sárvíz)",
+    "location": "Szedres",
+    "lat": 46.4744051,
+    "lon": 18.6848887
+  },
+  {
+    "name": "Széki-tó",
+    "location": "Devecser",
+    "lat": 47.104052,
+    "lon": 17.4364185
+  },
+  {
+    "name": "Szelidi-tó",
+    "location": "Dunapataj",
+    "lat": 46.6442755,
+    "lon": 18.9990105
+  },
+  {
+    "name": "Szélmezői-tó",
+    "location": "Mezőlak",
+    "lat": 47.3290827,
+    "lon": 17.3713022
+  },
+  {
+    "name": "Széna-réti-tó",
+    "location": "Nyírbátor",
+    "lat": 47.839511,
+    "lon": 22.1322309
+  },
+  {
+    "name": "Szepetneki horgásztó",
+    "location": "Szepetnek",
+    "lat": 46.4335412,
+    "lon": 16.8994777
+  },
+  {
+    "name": "Szerdahelyi-tó",
+    "location": "Tótszerdahely",
+    "lat": 46.4009156,
+    "lon": 16.7968822
+  },
+  {
+    "name": "Szeremlei Sugovica",
+    "location": "Baja",
+    "lat": 46.1785471,
+    "lon": 18.9517255
+  },
+  {
+    "name": "Szerencs-patak",
+    "location": "Szerencs",
+    "lat": 48.1633851,
+    "lon": 21.2010881
+  },
+  {
+    "name": "Sziget Horgásztó",
+    "location": "Andocs",
+    "lat": 46.6488345,
+    "lon": 17.9243409
+  },
+  {
+    "name": "Szigetes-tó",
+    "location": "Kiskorpád",
+    "lat": 46.364027,
+    "lon": 17.6106437
+  },
+  {
+    "name": "Sziki-tó",
+    "location": "Balmazújváros",
+    "lat": 47.6116279,
+    "lon": 21.3437378
+  },
+  {
+    "name": "Sziksós-tó",
+    "location": "Szeged",
+    "lat": 46.2546312,
+    "lon": 20.1486016
+  },
+  {
+    "name": "Szilas-Pataki Naplás-tó",
+    "location": "Budapest",
+    "lat": 47.4813896,
+    "lon": 19.1460941
+  },
+  {
+    "name": "Szili kavicsbányató",
+    "location": "Szil",
+    "lat": 47.5013162,
+    "lon": 17.2319589
+  },
+  {
+    "name": "Szirmabesenyői víztározó",
+    "location": "Szirmabesenyő",
+    "lat": 48.1540642,
+    "lon": 20.7959687
+  },
+  {
+    "name": "Sződligeti horgásztó",
+    "location": "Sződliget",
+    "lat": 47.7299732,
+    "lon": 19.1473194
+  },
+  {
+    "name": "Szőkei horgásztavak",
+    "location": "Szőke",
+    "lat": 45.9601117,
+    "lon": 18.1857541
+  },
+  {
+    "name": "Szőlőszemfarm Szórakoztató és Egészségfarm",
+    "location": "Tiszaszőlős",
+    "lat": 47.5562623,
+    "lon": 20.7197416
+  },
+  {
+    "name": "Szombathelyi Csónakázó- és Horgásztó",
+    "location": "Szombathely",
+    "lat": 47.2291184,
+    "lon": 16.6187625
+  },
+  {
+    "name": "Szoros-völgyi víztározó",
+    "location": "Bogács",
+    "lat": 47.9041176,
+    "lon": 20.5314509
+  },
+  {
+    "name": "Szűcsi bányató",
+    "location": "Szűcsi",
+    "lat": 47.8041906,
+    "lon": 19.7632166
+  },
+  {
+    "name": "Táci horgásztó",
+    "location": "Tác",
+    "lat": 47.0829509,
+    "lon": 18.4058071
+  },
+  {
+    "name": "Tárnoki horgásztó",
+    "location": "Tárnok",
+    "lat": 47.3668787,
+    "lon": 18.8660065
+  },
+  {
+    "name": "TasiFish Horgásztó",
+    "location": "Alsónána",
+    "lat": 46.2510122,
+    "lon": 18.6624125
+  },
+  {
+    "name": "Tatai Derítő-tó",
+    "location": "Tata",
+    "lat": 47.6516214,
+    "lon": 18.3282083
+  },
+  {
+    "name": "Téglagyári bányató",
+    "location": "Celldömölk",
+    "lat": 47.2579643,
+    "lon": 17.1521883
+  },
+  {
+    "name": "Téglagyári tó",
+    "location": "Kisújszállás",
+    "lat": 47.2162053,
+    "lon": 20.7546669
+  },
+  {
+    "name": "Téglagyári-tó",
+    "location": "Csepreg",
+    "lat": 47.401594,
+    "lon": 16.7078418
+  },
+  {
+    "name": "Téglagyári-tó",
+    "location": "Sárvár",
+    "lat": 47.2517426,
+    "lon": 16.9342165
+  },
+  {
+    "name": "Templom Tavak",
+    "location": "Folyás",
+    "lat": 47.8086069,
+    "lon": 21.1342116
+  },
+  {
+    "name": "Tereskei Horgásztó",
+    "location": "Tereske",
+    "lat": 47.9488126,
+    "lon": 19.1933853
+  },
+  {
+    "name": "Tisza",
+    "location": "Tiszakécske",
+    "lat": 46.9315289,
+    "lon": 20.1045358
+  },
+  {
+    "name": "Tisza",
+    "location": "Szeged",
+    "lat": 46.2546312,
+    "lon": 20.1486016
+  },
+  {
+    "name": "Tisza folyó",
+    "location": "Aranyosapáti",
+    "lat": 48.2122856,
+    "lon": 22.2567426
+  },
+  {
+    "name": "Tisza holtág",
+    "location": "Tiszaladány",
+    "lat": 48.0640691,
+    "lon": 21.4122743
+  },
+  {
+    "name": "Tisza-holtág (Kistisza)",
+    "location": "Ároktő",
+    "lat": 47.7281663,
+    "lon": 20.9434075
+  },
+  {
+    "name": "Tiszaligeti Csónakázó-tó",
+    "location": "Szolnok",
+    "lat": 47.1753833,
+    "lon": 20.1946279
+  },
+  {
+    "name": "Tiszaugi-holtág",
+    "location": "Tiszaug",
+    "lat": 46.8516867,
+    "lon": 20.0579352
+  },
+  {
+    "name": "Tiszavalki-főcsatorna",
+    "location": "Tiszavalk",
+    "lat": 47.6895637,
+    "lon": 20.7504616
+  },
+  {
+    "name": "Tóaljai tavak",
+    "location": "Mátraterenye",
+    "lat": 48.0309786,
+    "lon": 19.9483115
+  },
+  {
+    "name": "Tojári-tó",
+    "location": "Andocs",
+    "lat": 46.6488345,
+    "lon": 17.9243409
+  },
+  {
+    "name": "Tokaji Kovács Horgásztó",
+    "location": "Tokaj",
+    "lat": 48.1235534,
+    "lon": 21.4113895
+  },
+  {
+    "name": "Toma-tó Horgászparadicsom",
+    "location": "Kocsér",
+    "lat": 47.0020122,
+    "lon": 19.9225502
+  },
+  {
+    "name": "Törökbálinti Horgászpark",
+    "location": "Törökbálint",
+    "lat": 47.4349579,
+    "lon": 18.9130312
+  },
+  {
+    "name": "Tótszentgyörgyi horgásztó",
+    "location": "Tótszentgyörgy",
+    "lat": 46.0523291,
+    "lon": 17.7179219
+  },
+  {
+    "name": "Tőzeg-tó",
+    "location": "Bolhó",
+    "lat": 46.0384181,
+    "lon": 17.2978502
+  },
+  {
+    "name": "Tőzeges tavak",
+    "location": "Ceglédbercel",
+    "lat": 47.2150336,
+    "lon": 19.678569
+  },
+  {
+    "name": "Tőzeges-tó",
+    "location": "Gyömrő",
+    "lat": 47.4223375,
+    "lon": 19.394503
+  },
+  {
+    "name": "Tüskei-tó",
+    "location": "Dombóvár",
+    "lat": 46.3778989,
+    "lon": 18.1332865
+  },
+  {
+    "name": "Új-horgásztó",
+    "location": "Kovácshida",
+    "lat": 45.8337328,
+    "lon": 18.181049
+  },
+  {
+    "name": "Újperinti Pontytanya Horgásztó",
+    "location": "Szombathely",
+    "lat": 47.2291184,
+    "lon": 16.6187625
+  },
+  {
+    "name": "Újpesti téli-kikötő",
+    "location": "Budapest",
+    "lat": 47.4813896,
+    "lon": 19.1460941
+  },
+  {
+    "name": "Üllési Horgásztó",
+    "location": "Üllés",
+    "lat": 46.3371407,
+    "lon": 19.8486229
+  },
+  {
+    "name": "Vadása-tó",
+    "location": "Hegyhátszentjakab",
+    "lat": 46.8681648,
+    "lon": 16.5472519
+  },
+  {
+    "name": "Vadna Park",
+    "location": "Vadna",
+    "lat": 48.2730073,
+    "lon": 20.5538088
+  },
+  {
+    "name": "Vajai víztározó",
+    "location": "Vaja",
+    "lat": 47.9990668,
+    "lon": 22.1715133
+  },
+  {
+    "name": "Vajas-fok",
+    "location": "Dusnok",
+    "lat": 46.3900215,
+    "lon": 18.958962
+  },
+  {
+    "name": "Vályogos horgásztó",
+    "location": "Kiszombor",
+    "lat": 46.1889728,
+    "lon": 20.4270576
+  },
+  {
+    "name": "Varbói-tó",
+    "location": "Varbó",
+    "lat": 48.1624261,
+    "lon": 20.6192852
+  },
+  {
+    "name": "Várgesztesi horgásztó",
+    "location": "Várgesztes",
+    "lat": 47.4723494,
+    "lon": 18.3971059
+  },
+  {
+    "name": "Városlődi Horgásztó",
+    "location": "Városlőd",
+    "lat": 47.1460699,
+    "lon": 17.6540976
+  },
+  {
+    "name": "Vecsési horgásztó",
+    "location": "Vecsés",
+    "lat": 47.4068966,
+    "lon": 19.2643066
+  },
+  {
+    "name": "Vekeri-tó",
+    "location": "Debrecen",
+    "lat": 47.531399,
+    "lon": 21.6259782
+  },
+  {
+    "name": "Verba Tanya",
+    "location": "Kótaj",
+    "lat": 48.0478876,
+    "lon": 21.709878
+  },
+  {
+    "name": "Versági-tó",
+    "location": "Piskó",
+    "lat": 45.8105487,
+    "lon": 17.9352237
+  },
+  {
+    "name": "Vértesboglári horgásztó",
+    "location": "Vértesboglár",
+    "lat": 47.4289479,
+    "lon": 18.5247841
+  },
+  {
+    "name": "Vértessomlói homokbányatavak",
+    "location": "Vértessomló",
+    "lat": 47.5111685,
+    "lon": 18.365137
+  },
+  {
+    "name": "Veszkényi kavicsbányató",
+    "location": "Veszkény",
+    "lat": 47.5998622,
+    "lon": 17.0857366
+  },
+  {
+    "name": "Viktória-tavak",
+    "location": "Sükösd",
+    "lat": 46.2864294,
+    "lon": 18.9958175
+  },
+  {
+    "name": "Villantó Horgásztó",
+    "location": "Délegyháza",
+    "lat": 47.247818,
+    "lon": 19.066912
+  },
+  {
+    "name": "Visegrádi Pisztrángos Tavak",
+    "location": "Visegrád",
+    "lat": 47.7845811,
+    "lon": 18.9703373
+  },
+  {
+    "name": "Völgyhídi Horgásztó",
+    "location": "Kőröshegy",
+    "lat": 46.8312694,
+    "lon": 17.9005457
+  },
+  {
+    "name": "WF Szabadidőpark",
+    "location": "Komárom",
+    "lat": 47.7417349,
+    "lon": 18.1218256
+  },
+  {
+    "name": "Wild & Free Private Lake",
+    "location": "Nagycsepely",
+    "lat": 46.74979,
+    "lon": 17.834596
+  },
+  {
+    "name": "Zalaszentgyörgyi-tó",
+    "location": "Zalaszentgyörgy",
+    "lat": 46.8725154,
+    "lon": 16.7041584
+  },
+  {
+    "name": "Zalaszentmihályi Horgasztó",
+    "location": "Zalaszentmihály",
+    "lat": 46.7296101,
+    "lon": 16.949373
+  },
+  {
+    "name": "Zámolyi horgásztó",
+    "location": "Zámoly",
+    "lat": 47.3183087,
+    "lon": 18.4139732
+  },
+  {
+    "name": "Zichy-tó",
+    "location": "Zichyújfalu",
+    "lat": 47.1258547,
+    "lon": 18.6712913
+  },
+  {
+    "name": "Zis-tó",
+    "location": "Csurgó",
+    "lat": 46.2642514,
+    "lon": 17.0950874
+  },
+  {
+    "name": "Zöld-Tócsa horgásztó és szabadidőpark",
+    "location": "Pécel",
+    "lat": 47.4911201,
+    "lon": 19.3446801
+  },
+  {
+    "name": "Zoltán és Diana Horgásztó és Pihenőpark",
+    "location": "Alcsútdoboz",
+    "lat": 47.4254396,
+    "lon": 18.603219
+  }
+]
