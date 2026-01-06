@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:io';
-import 'dart:ui';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -11,15 +10,12 @@ import 'firebase_options.dart';
 
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:google_mobile_ads/google_mobile_ads.dart';
-import 'package:in_app_update/in_app_update.dart';
 
 import 'screens/home_screen.dart';
 import 'screens/subscription_screen.dart';
 
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
-final FlutterLocalNotificationsPlugin _localNotif =
-    FlutterLocalNotificationsPlugin();
+final FlutterLocalNotificationsPlugin _localNotif = FlutterLocalNotificationsPlugin();
 
 const AndroidNotificationChannel _channel = AndroidNotificationChannel(
   'high_importance_channel',
@@ -38,11 +34,11 @@ Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
+  // Hasznos, ha iOS-en “csak kilép” – legalább logolunk mindent, amit lehet.
   FlutterError.onError = (details) {
     debugPrint('FlutterError: ${details.exceptionAsString()}');
     debugPrint('${details.stack}');
   };
-
   PlatformDispatcher.instance.onError = (error, stack) {
     debugPrint('Uncaught error: $error');
     debugPrint('$stack');
@@ -51,37 +47,54 @@ Future<void> main() async {
 
   debugPrint('MAIN: start');
 
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
-
-  FirebaseMessaging.onBackgroundMessage(
-    firebaseMessagingBackgroundHandler,
-  );
-
-  // Ads csak Androidon
-  if (Platform.isAndroid) {
-    try {
-      await MobileAds.instance
-          .initialize()
-          .timeout(const Duration(seconds: 6));
-    } catch (_) {}
+  // Firebase init
+  try {
+    debugPrint('MAIN: before Firebase.initializeApp');
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
+    debugPrint('MAIN: after Firebase.initializeApp');
+  } catch (e, st) {
+    debugPrint('MAIN: Firebase init ERROR: $e');
+    debugPrint('$st');
   }
 
+  FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
+
+  // Theme pref
   bool isDarkMode = false;
   try {
-    final prefs = await SharedPreferences.getInstance();
+    debugPrint('MAIN: before SharedPreferences.getInstance');
+    final prefs = await SharedPreferences.getInstance().timeout(const Duration(seconds: 4));
     isDarkMode = prefs.getBool('darkMode') ?? false;
-  } catch (_) {}
+    debugPrint('MAIN: after SharedPreferences.getInstance (dark=$isDarkMode)');
+  } catch (e, st) {
+    debugPrint('MAIN: SharedPreferences WARNING: $e');
+    debugPrint('$st');
+  }
 
-  await _initLocalNotifications();
+  // Local notifications init (Android + iOS)
+  try {
+    debugPrint('MAIN: before _initLocalNotifications');
+    await _initLocalNotifications().timeout(const Duration(seconds: 8));
+    debugPrint('MAIN: after _initLocalNotifications');
+  } catch (e, st) {
+    debugPrint('MAIN: LocalNotifications WARNING: $e');
+    debugPrint('$st');
+  }
 
   runApp(FishingApp(initialDarkMode: isDarkMode));
+  debugPrint('MAIN: after runApp');
 }
 
 Future<void> _initLocalNotifications() async {
   const androidInit = AndroidInitializationSettings('@mipmap/ic_launcher');
-  const darwinInit = DarwinInitializationSettings();
+
+  const darwinInit = DarwinInitializationSettings(
+    requestAlertPermission: false,
+    requestBadgePermission: false,
+    requestSoundPermission: false,
+  );
 
   const initSettings = InitializationSettings(
     android: androidInit,
@@ -91,8 +104,7 @@ Future<void> _initLocalNotifications() async {
   await _localNotif.initialize(initSettings);
 
   final androidPlugin =
-      _localNotif.resolvePlatformSpecificImplementation<
-          AndroidFlutterLocalNotificationsPlugin>();
+      _localNotif.resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
   await androidPlugin?.createNotificationChannel(_channel);
 }
 
@@ -111,13 +123,46 @@ class _FishingAppState extends State<FishingApp> {
   void initState() {
     super.initState();
     isDarkTheme = widget.initialDarkMode;
-    _initPush();
+    _initPushNotifications();
   }
 
-  Future<void> _initPush() async {
+  Future<void> _initPushNotifications() async {
     try {
-      await FirebaseMessaging.instance.requestPermission();
-    } catch (_) {}
+      final messaging = FirebaseMessaging.instance;
+
+      await messaging.requestPermission();
+
+      FirebaseMessaging.onMessage.listen((msg) {
+        final notif = msg.notification;
+        // iOS-en ne próbáljunk Android local notificationt küldeni
+        if (notif == null || !Platform.isAndroid) return;
+
+        _localNotif.show(
+          notif.hashCode,
+          notif.title,
+          notif.body,
+          NotificationDetails(
+            android: AndroidNotificationDetails(
+              _channel.id,
+              _channel.name,
+              channelDescription: _channel.description,
+              importance: Importance.high,
+              priority: Priority.high,
+            ),
+          ),
+        );
+      });
+
+      FirebaseMessaging.onMessageOpenedApp.listen((msg) {
+        final route = msg.data['route'];
+        if (route is String) {
+          navigatorKey.currentState?.pushNamed(route);
+        }
+      });
+    } catch (e, st) {
+      debugPrint('PUSH INIT WARNING: $e');
+      debugPrint('$st');
+    }
   }
 
   Future<void> toggleTheme() async {
@@ -126,70 +171,55 @@ class _FishingAppState extends State<FishingApp> {
     await prefs.setBool('darkMode', isDarkTheme);
   }
 
+  ThemeData _buildLightTheme() {
+    final scheme = ColorScheme.fromSeed(seedColor: Colors.lightBlue);
+    return ThemeData(useMaterial3: true, colorScheme: scheme);
+  }
+
+  ThemeData _buildDarkTheme() {
+    final scheme = ColorScheme.fromSeed(
+      seedColor: Colors.lightBlue,
+      brightness: Brightness.dark,
+    );
+    return ThemeData(useMaterial3: true, colorScheme: scheme);
+  }
+
+  Route<dynamic> _onGenerateRoute(RouteSettings settings) {
+    switch (settings.name) {
+      case '/':
+        // Loader nélkül: közvetlenül HomeScreen
+        return MaterialPageRoute(
+          builder: (_) => HomeScreen(
+            isDarkTheme: isDarkTheme,
+            onToggleTheme: toggleTheme,
+          ),
+        );
+
+      case '/subscription':
+        return MaterialPageRoute(
+          builder: (_) => const SubscriptionScreen(),
+        );
+
+      default:
+        return MaterialPageRoute(
+          builder: (_) => const Scaffold(
+            body: Center(child: Text('Ismeretlen oldal')),
+          ),
+        );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       navigatorKey: navigatorKey,
       debugShowCheckedModeBanner: false,
       title: 'Pecazom',
+      theme: _buildLightTheme(),
+      darkTheme: _buildDarkTheme(),
       themeMode: isDarkTheme ? ThemeMode.dark : ThemeMode.light,
-      theme: ThemeData(useMaterial3: true),
-      darkTheme:
-          ThemeData(useMaterial3: true, brightness: Brightness.dark),
-      home: BootLoader(
-        isDarkTheme: isDarkTheme,
-        onToggleTheme: toggleTheme,
-      ),
-      routes: {
-        '/subscription': (_) => const SubscriptionScreen(),
-      },
-    );
-  }
-}
-
-/* ============================================================
-   SAFE BOOT LOADER (NO VIDEO, NO ASSETS)
-   ============================================================ */
-
-class BootLoader extends StatefulWidget {
-  final bool isDarkTheme;
-  final Future<void> Function() onToggleTheme;
-
-  const BootLoader({
-    super.key,
-    required this.isDarkTheme,
-    required this.onToggleTheme,
-  });
-
-  @override
-  State<BootLoader> createState() => _BootLoaderState();
-}
-
-class _BootLoaderState extends State<BootLoader> {
-  bool _ready = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _boot();
-  }
-
-  Future<void> _boot() async {
-    await Future.delayed(const Duration(milliseconds: 600));
-    if (mounted) setState(() => _ready = true);
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    if (!_ready) {
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      );
-    }
-
-    return HomeScreen(
-      isDarkTheme: widget.isDarkTheme,
-      onToggleTheme: widget.onToggleTheme,
+      initialRoute: '/',
+      onGenerateRoute: _onGenerateRoute,
     );
   }
 }
