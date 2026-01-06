@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'firebase_options.dart';
 
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
@@ -28,6 +29,11 @@ const AndroidNotificationChannel _channel = AndroidNotificationChannel(
   importance: Importance.high,
 );
 
+/// iOS instant-crash izolálás: kapcsolók (ha kell, később prefsből is tehető)
+const bool _disableAdsOnIOS = true;        // ideiglenesen: iOS-en Ads init OFF
+const bool _disablePushOnIOS = false;      // ha még mindig crashel, tedd true-ra egy build erejéig
+const bool _useVideoLoaderOnIOS = false;   // ideiglenesen: iOS-en videó helyett fallback loader
+
 @pragma('vm:entry-point')
 Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   await Firebase.initializeApp(
@@ -37,59 +43,87 @@ Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  debugPrint('MAIN: start');
 
-  try {
-    debugPrint('MAIN: before Firebase.initializeApp');
-    await Firebase.initializeApp(
-      options: DefaultFirebaseOptions.currentPlatform,
-    );
-    debugPrint('MAIN: after Firebase.initializeApp');
-  } catch (e, st) {
-    debugPrint('MAIN: Firebase init ERROR: $e');
-    debugPrint('$st');
-  }
+  // 1) Flutter framework hibák → Crashlytics
+  FlutterError.onError = (FlutterErrorDetails details) {
+    FlutterError.presentError(details);
+    FirebaseCrashlytics.instance.recordFlutterFatalError(details);
+  };
 
-  // Mobile Ads: iOS-en is ok, de ne blokkoljon.
-  try {
-    debugPrint('MAIN: before MobileAds.initialize');
-    await MobileAds.instance.initialize().timeout(const Duration(seconds: 6));
-    debugPrint('MAIN: after MobileAds.initialize');
-  } catch (e, st) {
-    debugPrint('MAIN: MobileAds init WARNING: $e');
-    debugPrint('$st');
-  }
+  // 2) Dart uncaught hibák → Crashlytics
+  PlatformDispatcher.instance.onError = (error, stack) {
+    FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
+    return true;
+  };
 
-  FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
+  await runZonedGuarded(() async {
+    debugPrint('MAIN: start');
 
-  bool isDarkMode = false;
-  try {
-    debugPrint('MAIN: before SharedPreferences.getInstance');
-    final prefs = await SharedPreferences.getInstance().timeout(const Duration(seconds: 4));
-    isDarkMode = prefs.getBool('darkMode') ?? false;
-    debugPrint('MAIN: after SharedPreferences.getInstance (dark=$isDarkMode)');
-  } catch (e, st) {
-    debugPrint('MAIN: SharedPreferences WARNING: $e');
-    debugPrint('$st');
-  }
+    try {
+      debugPrint('MAIN: before Firebase.initializeApp');
+      await Firebase.initializeApp(
+        options: DefaultFirebaseOptions.currentPlatform,
+      );
+      debugPrint('MAIN: after Firebase.initializeApp');
+    } catch (e, st) {
+      debugPrint('MAIN: Firebase init ERROR: $e');
+      debugPrint('$st');
+      await FirebaseCrashlytics.instance.recordError(e, st, fatal: true);
+    }
 
-  try {
-    debugPrint('MAIN: before _initLocalNotifications');
-    await _initLocalNotifications().timeout(const Duration(seconds: 6));
-    debugPrint('MAIN: after _initLocalNotifications');
-  } catch (e, st) {
-    debugPrint('MAIN: LocalNotifications WARNING: $e');
-    debugPrint('$st');
-  }
+    // Firebase Messaging background handler
+    FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
 
-  runApp(FishingApp(initialDarkMode: isDarkMode));
-  debugPrint('MAIN: after runApp');
+    // 3) Mobile Ads init – iOS-en ideiglenesen OFF (nagyon gyakori instant crash ok)
+    if (!(Platform.isIOS && _disableAdsOnIOS)) {
+      try {
+        debugPrint('MAIN: before MobileAds.initialize');
+        await MobileAds.instance.initialize().timeout(const Duration(seconds: 6));
+        debugPrint('MAIN: after MobileAds.initialize');
+      } catch (e, st) {
+        debugPrint('MAIN: MobileAds init WARNING: $e');
+        debugPrint('$st');
+        await FirebaseCrashlytics.instance.recordError(e, st, reason: 'MobileAds init', fatal: false);
+      }
+    } else {
+      debugPrint('MAIN: MobileAds skipped on iOS (temporary)');
+    }
+
+    bool isDarkMode = false;
+    try {
+      debugPrint('MAIN: before SharedPreferences.getInstance');
+      final prefs = await SharedPreferences.getInstance().timeout(const Duration(seconds: 4));
+      isDarkMode = prefs.getBool('darkMode') ?? false;
+      debugPrint('MAIN: after SharedPreferences.getInstance (dark=$isDarkMode)');
+    } catch (e, st) {
+      debugPrint('MAIN: SharedPreferences WARNING: $e');
+      debugPrint('$st');
+      await FirebaseCrashlytics.instance.recordError(e, st, reason: 'SharedPreferences init', fatal: false);
+    }
+
+    try {
+      debugPrint('MAIN: before _initLocalNotifications');
+      await _initLocalNotifications().timeout(const Duration(seconds: 6));
+      debugPrint('MAIN: after _initLocalNotifications');
+    } catch (e, st) {
+      debugPrint('MAIN: LocalNotifications WARNING: $e');
+      debugPrint('$st');
+      await FirebaseCrashlytics.instance.recordError(e, st, reason: 'LocalNotifications init', fatal: false);
+    }
+
+    runApp(FishingApp(initialDarkMode: isDarkMode));
+    debugPrint('MAIN: after runApp');
+  }, (error, stack) async {
+    // 4) Zoned uncaught → Crashlytics
+    debugPrint('ZONED_FATAL: $error');
+    debugPrint('$stack');
+    await FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
+  });
 }
 
 Future<void> _initLocalNotifications() async {
   const androidInit = AndroidInitializationSettings('@mipmap/ic_launcher');
 
-  // iOS init + permission prompt configuration
   const darwinInit = DarwinInitializationSettings(
     requestAlertPermission: true,
     requestBadgePermission: true,
@@ -104,7 +138,6 @@ Future<void> _initLocalNotifications() async {
   await _localNotif.initialize(
     initSettings,
     onDidReceiveNotificationResponse: (NotificationResponse resp) {
-      // Ha később szeretnél route-ot kezelni local notifből:
       final payload = resp.payload;
       if (payload != null && payload.isNotEmpty) {
         navigatorKey.currentState?.pushNamed(payload);
@@ -112,7 +145,6 @@ Future<void> _initLocalNotifications() async {
     },
   );
 
-  // Android channel létrehozás csak Androidon
   if (Platform.isAndroid) {
     final androidPlugin =
         _localNotif.resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
@@ -135,14 +167,19 @@ class _FishingAppState extends State<FishingApp> {
   void initState() {
     super.initState();
     isDarkTheme = widget.initialDarkMode;
-    _initPushNotifications();
+
+    // iOS instant crash izolálás: ha kell, kapcsold ki push initet
+    if (!(Platform.isIOS && _disablePushOnIOS)) {
+      _initPushNotifications();
+    } else {
+      debugPrint('PUSH INIT skipped on iOS (temporary)');
+    }
   }
 
   Future<void> _initPushNotifications() async {
     try {
       final messaging = FirebaseMessaging.instance;
 
-      // iOS: explicit permission szükséges
       await messaging.requestPermission(
         alert: true,
         badge: true,
@@ -150,15 +187,12 @@ class _FishingAppState extends State<FishingApp> {
         provisional: false,
       );
 
-      // iOS: foreground notif viselkedés (különösen ha nem akarsz local notifet)
-      // Itt mi local notifet is megjelenítünk, de ez segít a rendszeroldali kezelésben is.
       await FirebaseMessaging.instance.setForegroundNotificationPresentationOptions(
         alert: true,
         badge: true,
         sound: true,
       );
 
-      // iOS: hasznos debughoz (APNs token)
       if (Platform.isIOS) {
         final apnsToken = await messaging.getAPNSToken();
         debugPrint('PUSH: APNs token = $apnsToken');
@@ -167,8 +201,6 @@ class _FishingAppState extends State<FishingApp> {
       FirebaseMessaging.onMessage.listen((msg) async {
         final notif = msg.notification;
         if (notif == null) return;
-
-        // Foreground: mutassunk local notifet Androidon és iOS-en is.
         await _showLocalFromRemote(notif: notif, data: msg.data);
       });
 
@@ -179,18 +211,17 @@ class _FishingAppState extends State<FishingApp> {
         }
       });
 
-      // Hidegindítás (app megnyitva értesítésből)
       final initialMessage = await messaging.getInitialMessage();
       if (initialMessage != null) {
         final route = initialMessage.data['route'];
         if (route is String && route.isNotEmpty) {
-          // Célszerű egy microtask, hogy Navigator biztosan készen legyen.
           scheduleMicrotask(() => navigatorKey.currentState?.pushNamed(route));
         }
       }
     } catch (e, st) {
       debugPrint('PUSH INIT WARNING: $e');
       debugPrint('$st');
+      await FirebaseCrashlytics.instance.recordError(e, st, reason: 'Push init', fatal: false);
     }
   }
 
@@ -198,7 +229,6 @@ class _FishingAppState extends State<FishingApp> {
     required RemoteNotification notif,
     required Map<String, dynamic> data,
   }) async {
-    // Opcionális: route payload átadása local notif payloadban
     final route = data['route'];
     final payload = (route is String && route.isNotEmpty) ? route : null;
 
@@ -335,7 +365,6 @@ class _BootLoaderState extends State<BootLoader> with WidgetsBindingObserver {
   }
 
   Future<void> _checkImmediateUpdateIfNeeded() async {
-    // In-app update csak Android (Play Core). iOS-en App Store.
     if (!Platform.isAndroid) return;
     if (_checkingUpdate) return;
     _checkingUpdate = true;
@@ -369,6 +398,7 @@ class _BootLoaderState extends State<BootLoader> with WidgetsBindingObserver {
     } catch (e, st) {
       debugPrint('UPDATE: error (non-blocking): $e');
       debugPrint('$st');
+      await FirebaseCrashlytics.instance.recordError(e, st, reason: 'InAppUpdate', fatal: false);
     } finally {
       _checkingUpdate = false;
     }
@@ -399,6 +429,11 @@ class _BootLoaderState extends State<BootLoader> with WidgetsBindingObserver {
   }
 }
 
+/* ============================================================
+   LOADER VIEW
+   iOS: ideiglenesen fallback (video nélkül), hogy ne itt crasheljen
+   ============================================================ */
+
 class _LogoLoaderView extends StatefulWidget {
   const _LogoLoaderView();
 
@@ -407,24 +442,42 @@ class _LogoLoaderView extends StatefulWidget {
 }
 
 class _LogoLoaderViewState extends State<_LogoLoaderView> {
-  late final VideoPlayerController _controller;
+  VideoPlayerController? _controller;
 
   @override
   void initState() {
     super.initState();
-    _controller = VideoPlayerController.asset('assets/video/loader.mp4')
-      ..initialize().then((_) {
+
+    // iOS-en ideiglenes fallback – ha kell video iOS-en is, később visszakapcsoljuk
+    if (Platform.isIOS && !_useVideoLoaderOnIOS) {
+      return;
+    }
+
+    try {
+      final c = VideoPlayerController.asset('assets/video/loader.mp4');
+      _controller = c;
+
+      c.initialize().then((_) {
         if (!mounted) return;
-        _controller
+        c
           ..setLooping(true)
           ..play();
         setState(() {});
+      }).catchError((e, st) async {
+        debugPrint('VIDEO init error: $e');
+        debugPrint('$st');
+        await FirebaseCrashlytics.instance.recordError(e, st, reason: 'Video init', fatal: false);
       });
+    } catch (e, st) {
+      debugPrint('VIDEO ctor error: $e');
+      debugPrint('$st');
+      FirebaseCrashlytics.instance.recordError(e, st, reason: 'Video ctor', fatal: false);
+    }
   }
 
   @override
   void dispose() {
-    _controller.dispose();
+    _controller?.dispose();
     super.dispose();
   }
 
@@ -432,19 +485,28 @@ class _LogoLoaderViewState extends State<_LogoLoaderView> {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
 
+    // iOS fallback loader (nem video)
+    if (Platform.isIOS && !_useVideoLoaderOnIOS) {
+      return Scaffold(
+        backgroundColor: scheme.surface,
+        body: const Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    final c = _controller;
     return Scaffold(
       backgroundColor: scheme.surface,
       body: Center(
-        child: _controller.value.isInitialized
+        child: (c != null && c.value.isInitialized)
             ? SizedBox(
                 width: 180,
                 height: 180,
                 child: FittedBox(
                   fit: BoxFit.contain,
                   child: SizedBox(
-                    width: _controller.value.size.width,
-                    height: _controller.value.size.height,
-                    child: VideoPlayer(_controller),
+                    width: c.value.size.width,
+                    height: c.value.size.height,
+                    child: VideoPlayer(c),
                   ),
                 ),
               )
