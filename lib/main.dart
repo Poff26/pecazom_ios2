@@ -29,6 +29,7 @@ const AndroidNotificationChannel _channel = AndroidNotificationChannel(
 
 @pragma('vm:entry-point')
 Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+  // Background isolate-ban is kell init
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
@@ -36,8 +37,22 @@ Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Ha iOS-en “csak kilép”, sokszor egy uncaught exception/abort van a háttérben.
+  FlutterError.onError = (details) {
+    debugPrint('FlutterError: ${details.exceptionAsString()}');
+    debugPrint('${details.stack}');
+  };
+
+  PlatformDispatcher.instance.onError = (error, stack) {
+    debugPrint('Uncaught error: $error');
+    debugPrint('$stack');
+    return true;
+  };
+
   debugPrint('MAIN: start');
 
+  // Firebase init
   try {
     debugPrint('MAIN: before Firebase.initializeApp');
     await Firebase.initializeApp(
@@ -49,18 +64,26 @@ Future<void> main() async {
     debugPrint('$st');
   }
 
-  // Ne akassza meg az indítást: ha beragadna, ne várjunk rá örökké.
+  // Background handler regisztrálás
+  FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
+
+  // Ads init:
+  // iOS-en a Google Mobile Ads SDK gyakran “hard exit”-et okoz, ha nincs Info.plist-ben GADApplicationIdentifier.
+  // Ezért iOS-en most kihagyjuk, amíg nincs rendesen beállítva.
   try {
-    debugPrint('MAIN: before MobileAds.initialize');
-    await MobileAds.instance.initialize().timeout(const Duration(seconds: 6));
-    debugPrint('MAIN: after MobileAds.initialize');
+    if (Platform.isAndroid) {
+      debugPrint('MAIN: before MobileAds.initialize (Android only)');
+      await MobileAds.instance.initialize().timeout(const Duration(seconds: 6));
+      debugPrint('MAIN: after MobileAds.initialize');
+    } else {
+      debugPrint('MAIN: MobileAds skipped (not Android)');
+    }
   } catch (e, st) {
     debugPrint('MAIN: MobileAds init WARNING: $e');
     debugPrint('$st');
   }
 
-  FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
-
+  // Theme pref
   bool isDarkMode = false;
   try {
     debugPrint('MAIN: before SharedPreferences.getInstance');
@@ -72,9 +95,10 @@ Future<void> main() async {
     debugPrint('$st');
   }
 
+  // Local notifications init (Android + iOS)
   try {
     debugPrint('MAIN: before _initLocalNotifications');
-    await _initLocalNotifications().timeout(const Duration(seconds: 6));
+    await _initLocalNotifications().timeout(const Duration(seconds: 8));
     debugPrint('MAIN: after _initLocalNotifications');
   } catch (e, st) {
     debugPrint('MAIN: LocalNotifications WARNING: $e');
@@ -87,12 +111,22 @@ Future<void> main() async {
 
 Future<void> _initLocalNotifications() async {
   const androidInit = AndroidInitializationSettings('@mipmap/ic_launcher');
-  const initSettings = InitializationSettings(android: androidInit);
+  const darwinInit = DarwinInitializationSettings(
+    requestAlertPermission: false,
+    requestBadgePermission: false,
+    requestSoundPermission: false,
+  );
+
+  const initSettings = InitializationSettings(
+    android: androidInit,
+    iOS: darwinInit,
+  );
 
   await _localNotif.initialize(initSettings);
 
+  // Android channel only
   final androidPlugin =
-  _localNotif.resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
+      _localNotif.resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
   await androidPlugin?.createNotificationChannel(_channel);
 }
 
@@ -117,8 +151,11 @@ class _FishingAppState extends State<FishingApp> {
   Future<void> _initPushNotifications() async {
     try {
       final messaging = FirebaseMessaging.instance;
+
+      // iOS-en ez csak permission, Androidon is működik (runtime nincs gond)
       await messaging.requestPermission();
 
+      // Foreground notification megjelenítés: csak Androidon mutatjuk local notif-fal
       FirebaseMessaging.onMessage.listen((msg) {
         final notif = msg.notification;
         if (notif == null || !Platform.isAndroid) return;
@@ -235,8 +272,6 @@ class _BootLoaderState extends State<BootLoader> with WidgetsBindingObserver {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-
-    // Nem blokkoljuk a boot-ot: párhuzamosan fut az update check és a splash delay.
     _boot();
   }
 
@@ -249,15 +284,12 @@ class _BootLoaderState extends State<BootLoader> with WidgetsBindingObserver {
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
-      _checkImmediateUpdateIfNeeded(); // ez már safe/timeoutos
+      _checkImmediateUpdateIfNeeded();
     }
   }
 
   Future<void> _boot() async {
-    // 1) Indítsuk el az update check-et, de ne várjunk rá örökké (és ne blokkoljuk a UI-t)
     unawaited(_checkImmediateUpdateIfNeeded());
-
-    // 2) A meglévő splash késleltetésed
     await Future.delayed(const Duration(milliseconds: 900));
 
     if (!mounted) return;
@@ -269,7 +301,6 @@ class _BootLoaderState extends State<BootLoader> with WidgetsBindingObserver {
     if (_checkingUpdate) return;
     _checkingUpdate = true;
 
-    // Debugban/emulátoron tipikusan problémás lehet. Ha szeretnéd, debug módban kapcsold ki:
     if (kDebugMode) {
       debugPrint('UPDATE: skipped in debug mode');
       _checkingUpdate = false;
@@ -278,14 +309,12 @@ class _BootLoaderState extends State<BootLoader> with WidgetsBindingObserver {
 
     try {
       debugPrint('UPDATE: checkForUpdate() start');
-
-      // Timeout, hogy soha ne ragadjon be.
       final info = await InAppUpdate.checkForUpdate().timeout(const Duration(seconds: 6));
 
       debugPrint(
         'UPDATE: availability=${info.updateAvailability}, '
-            'immediateAllowed=${info.immediateUpdateAllowed}, '
-            'flexibleAllowed=${info.flexibleUpdateAllowed}',
+        'immediateAllowed=${info.immediateUpdateAllowed}, '
+        'flexibleAllowed=${info.flexibleUpdateAllowed}',
       );
 
       final available = info.updateAvailability == UpdateAvailability.updateAvailable;
@@ -293,10 +322,7 @@ class _BootLoaderState extends State<BootLoader> with WidgetsBindingObserver {
 
       if (available && allowed) {
         debugPrint('UPDATE: performImmediateUpdate() start');
-
-        // Ez önmagában blokkoló flow, ezért kap timeoutot.
         await InAppUpdate.performImmediateUpdate().timeout(const Duration(seconds: 30));
-
         debugPrint('UPDATE: performImmediateUpdate() done');
       }
     } on TimeoutException catch (_) {
@@ -336,13 +362,6 @@ class _BootLoaderState extends State<BootLoader> with WidgetsBindingObserver {
 
 /* ============================================================
    LOADING VIDEO VIEW (MP4)
-   Put your file here: assets/video/loader.mp4
-   Add to pubspec.yaml:
-     flutter:
-       assets:
-         - assets/video/loader.mp4
-   Also add dependency:
-     video_player: ^2.9.1
    ============================================================ */
 
 class _LogoLoaderView extends StatefulWidget {
@@ -379,21 +398,21 @@ class _LogoLoaderViewState extends State<_LogoLoaderView> {
     final scheme = Theme.of(context).colorScheme;
 
     return Scaffold(
-      backgroundColor: scheme.surface, // MP4 has no alpha -> use theme surface
+      backgroundColor: scheme.surface,
       body: Center(
         child: _controller.value.isInitialized
             ? SizedBox(
-          width: 180,
-          height: 180,
-          child: FittedBox(
-            fit: BoxFit.contain,
-            child: SizedBox(
-              width: _controller.value.size.width,
-              height: _controller.value.size.height,
-              child: VideoPlayer(_controller),
-            ),
-          ),
-        )
+                width: 180,
+                height: 180,
+                child: FittedBox(
+                  fit: BoxFit.contain,
+                  child: SizedBox(
+                    width: _controller.value.size.width,
+                    height: _controller.value.size.height,
+                    child: VideoPlayer(_controller),
+                  ),
+                ),
+              )
             : const SizedBox.shrink(),
       ),
     );
