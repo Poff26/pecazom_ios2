@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:io';
 import 'dart:ui';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -24,8 +23,7 @@ class MainHomeContent extends StatefulWidget {
   State<MainHomeContent> createState() => _MainHomeContentState();
 }
 
-class _MainHomeContentState extends State<MainHomeContent>
-    with TickerProviderStateMixin {
+class _MainHomeContentState extends State<MainHomeContent> with TickerProviderStateMixin {
   static const String currentVersion = '2.0.2';
 
   String _displayName = 'Felhasználó';
@@ -52,14 +50,20 @@ class _MainHomeContentState extends State<MainHomeContent>
     curve: Curves.easeOutCubic,
   );
 
+  // XP gain overlay animation
   OverlayEntry? _xpOverlay;
 
+  // Firestore users collection
   final _usersRef = FirebaseFirestore.instance.collection('users');
 
+  // XP constants
   static const int _xpPerLevel = 300;
   static const int _dailyClaimXp = 15;
   static const int _xpPerPost = 10;
 
+  // ----------------------------
+  // STRICT forced update state (FULL SCREEN BLOCK)
+  // ----------------------------
   bool _forceBlocked = false;
   String? _storeUrl;
   String? _minVersion;
@@ -71,10 +75,12 @@ class _MainHomeContentState extends State<MainHomeContent>
   void initState() {
     super.initState();
 
+    // 1) Auth változásokat NE build-ben kezeld, hanem itt.
     _authSub = FirebaseAuth.instance.authStateChanges().listen((user) {
       _onUserChanged(user);
     });
 
+    // 2) Startup checkek első frame után (kevesebb jank)
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       _runStartupChecks();
@@ -90,18 +96,28 @@ class _MainHomeContentState extends State<MainHomeContent>
   }
 
   Future<void> _runStartupChecks() async {
+    // Párhuzamosítva (gyorsabb indulás)
     await Future.wait([
       _checkAndShowChangelog(),
       _checkForcedUpdateStrict(),
     ]);
   }
 
+  // ----------------------------
+  // Version + forced update (STRICT)
+  // Firestore doc: config/app_version
+  // {
+  //   force_update: true,
+  //   min_version: "2.0.1",
+  //   latest_version: "2.1.0",
+  //   play_store_url: "https://play.google.com/store/apps/details?id=..."
+  // }
+  // Forced condition: force_update && currentVersion < min_version
+  // ----------------------------
+
   Future<void> _checkForcedUpdateStrict() async {
     try {
-      final doc = await FirebaseFirestore.instance
-          .collection('config')
-          .doc('app_version')
-          .get();
+      final doc = await FirebaseFirestore.instance.collection('config').doc('app_version').get();
       if (!doc.exists) return;
 
       final data = doc.data();
@@ -141,7 +157,7 @@ class _MainHomeContentState extends State<MainHomeContent>
 
   int _compareSemver(String a, String b) {
     List<int> parse(String v) {
-      final core = v.split('+').first.split('-').first;
+      final core = v.split('+').first.split('-').first; // "2.0.0+1" -> "2.0.0"
       final parts = core.split('.');
       return [
         int.tryParse(parts.elementAtOrNull(0) ?? '0') ?? 0,
@@ -189,9 +205,9 @@ class _MainHomeContentState extends State<MainHomeContent>
             content: const SingleChildScrollView(
               child: Text(
                 '• Megújult főoldal és közösségi feed\n'
-                '• Stabilabb bejelentkezés és értesítések\n'
-                '• Teljesítmény és UX finomhangolás\n\n'
-                'Visszajelzés: info@pecazom.hu',
+                    '• Stabilabb bejelentkezés és értesítések\n'
+                    '• Teljesítmény és UX finomhangolás\n\n'
+                    'Visszajelzés: info@pecazom.hu',
               ),
             ),
             actions: [
@@ -207,6 +223,10 @@ class _MainHomeContentState extends State<MainHomeContent>
       await prefs.setBool(key, true);
     } catch (_) {}
   }
+
+  // ----------------------------
+  // Helpers
+  // ----------------------------
 
   String _todayKey() {
     final now = DateTime.now();
@@ -238,6 +258,10 @@ class _MainHomeContentState extends State<MainHomeContent>
 
   int _levelFromXp(int xp) => (xp ~/ _xpPerLevel) + 1;
   double _progressFromXp(int xp) => (xp % _xpPerLevel) / _xpPerLevel;
+
+  // ----------------------------
+  // XP overlay
+  // ----------------------------
 
   void _removeXpOverlay() {
     _xpOverlay?.remove();
@@ -278,13 +302,11 @@ class _MainHomeContentState extends State<MainHomeContent>
                 child: FadeTransition(
                   opacity: fade,
                   child: Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 14, vertical: 10),
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                     decoration: BoxDecoration(
                       color: scheme.surface.withOpacity(0.92),
                       borderRadius: BorderRadius.circular(999),
-                      border: Border.all(
-                          color: scheme.outlineVariant.withOpacity(0.35)),
+                      border: Border.all(color: scheme.outlineVariant.withOpacity(0.35)),
                       boxShadow: [
                         BoxShadow(
                           blurRadius: 26,
@@ -300,10 +322,9 @@ class _MainHomeContentState extends State<MainHomeContent>
                         const SizedBox(width: 8),
                         Text(
                           '+$amount XP',
-                          style: Theme.of(context)
-                              .textTheme
-                              .titleMedium
-                              ?.copyWith(fontWeight: FontWeight.w900),
+                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.w900,
+                          ),
                         ),
                       ],
                     ),
@@ -326,6 +347,10 @@ class _MainHomeContentState extends State<MainHomeContent>
     });
   }
 
+  // ----------------------------
+  // Auth + user loading
+  // ----------------------------
+
   Future<void> _onUserChanged(User? user) async {
     final uid = user?.uid;
     if (uid == _activeUserId) return;
@@ -341,6 +366,7 @@ class _MainHomeContentState extends State<MainHomeContent>
       return;
     }
 
+    // Ezt sequential-ben hagyjuk, de csak auth váltáskor fut.
     await _loadDisplayName(uid);
     await _refreshDailyMetrics(uid);
     await _maybeStartTutorial(uid);
@@ -396,8 +422,7 @@ class _MainHomeContentState extends State<MainHomeContent>
         contents: [
           TargetContent(
             align: ContentAlign.bottom,
-            child: _tutorialText(
-                'Ma neked: streak, napi kihívás és jutalom. Nézz rá naponta.'),
+            child: _tutorialText('Ma neked: streak, napi kihívás és jutalom. Nézz rá naponta.'),
           ),
         ],
       ),
@@ -409,8 +434,7 @@ class _MainHomeContentState extends State<MainHomeContent>
         contents: [
           TargetContent(
             align: ContentAlign.bottom,
-            child: _tutorialText(
-                'AI előrejelzés: napi 3 lekérdezés. Ajánlott idő, csali és célhal.'),
+            child: _tutorialText('AI előrejelzés: napi 3 lekérdezés. Ajánlott idő, csali és célhal.'),
           ),
         ],
       ),
@@ -422,8 +446,7 @@ class _MainHomeContentState extends State<MainHomeContent>
         contents: [
           TargetContent(
             align: ContentAlign.bottom,
-            child: _tutorialText(
-                'Statisztikák: a saját eredményeid és aktivitásod áttekintése.'),
+            child: _tutorialText('Statisztikák: a saját eredményeid és aktivitásod áttekintése.'),
           ),
         ],
       ),
@@ -436,8 +459,7 @@ class _MainHomeContentState extends State<MainHomeContent>
           contents: [
             TargetContent(
               align: ContentAlign.top,
-              child: _tutorialText(
-                  'Közösség: itt tudsz új bejegyzést közzétenni.'),
+              child: _tutorialText('Közösség: itt tudsz új bejegyzést közzétenni.'),
             ),
           ],
         ),
@@ -449,8 +471,7 @@ class _MainHomeContentState extends State<MainHomeContent>
         contents: [
           TargetContent(
             align: ContentAlign.top,
-            child:
-                _tutorialText('Verzióinformáció és kapcsolat a képernyő alján.'),
+            child: _tutorialText('Verzióinformáció és kapcsolat a képernyő alján.'),
           ),
         ],
       ),
@@ -471,20 +492,25 @@ class _MainHomeContentState extends State<MainHomeContent>
   }
 
   Widget _tutorialText(String text) => Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-        child: Text(
-          text,
-          textAlign: TextAlign.center,
-          style: const TextStyle(
-            color: Colors.white,
-            fontSize: 18,
-            fontWeight: FontWeight.w700,
-            height: 1.25,
-          ),
-        ),
-      );
+    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+    child: Text(
+      text,
+      textAlign: TextAlign.center,
+      style: const TextStyle(
+        color: Colors.white,
+        fontSize: 18,
+        fontWeight: FontWeight.w700,
+        height: 1.25,
+      ),
+    ),
+  );
+
+  // ----------------------------
+  // Firestore metrics
+  // ----------------------------
 
   Future<void> _ensureUserDefaults(String uid) async {
+    // Tranzakció helyett olcsó merge set: gyorsabb, kevesebb lock/jank.
     final today = _todayKey();
     await _usersRef.doc(uid).set(
       {
@@ -492,7 +518,7 @@ class _MainHomeContentState extends State<MainHomeContent>
         'level': FieldValue.increment(0),
         'streakDays': FieldValue.increment(0),
         'lastOpenDate': today,
-        'claimedDate': FieldValue.delete(),
+        'claimedDate': FieldValue.delete(), // csak ha nincs, ne erőltesd
         'postedDate': FieldValue.delete(),
       },
       SetOptions(merge: true),
@@ -513,10 +539,9 @@ class _MainHomeContentState extends State<MainHomeContent>
       final String? claimedDate = data['claimedDate'] as String?;
       final String? lastOpenDate = data['lastOpenDate'] as String?;
 
+      // csak ha tényleg eltér
       if (lastOpenDate != today) {
-        _usersRef
-            .doc(uid)
-            .set({'lastOpenDate': today}, SetOptions(merge: true));
+        _usersRef.doc(uid).set({'lastOpenDate': today}, SetOptions(merge: true));
       }
 
       final level = _levelFromXp(xp);
@@ -631,6 +656,10 @@ class _MainHomeContentState extends State<MainHomeContent>
     } catch (_) {}
   }
 
+  // ----------------------------
+  // XP info sheet
+  // ----------------------------
+
   void _showXpInfoSheet() {
     final scheme = Theme.of(context).colorScheme;
 
@@ -657,9 +686,7 @@ class _MainHomeContentState extends State<MainHomeContent>
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(title,
-                          style: t.titleMedium
-                              ?.copyWith(fontWeight: FontWeight.w900)),
+                      Text(title, style: t.titleMedium?.copyWith(fontWeight: FontWeight.w900)),
                       const SizedBox(height: 4),
                       Text(
                         subtitle,
@@ -685,10 +712,7 @@ class _MainHomeContentState extends State<MainHomeContent>
                 alignment: Alignment.centerLeft,
                 child: Text(
                   'Hogyan szerezhetek XP-t?',
-                  style: Theme.of(ctx)
-                      .textTheme
-                      .titleLarge
-                      ?.copyWith(fontWeight: FontWeight.w900),
+                  style: Theme.of(ctx).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900),
                 ),
               ),
               const SizedBox(height: 12),
@@ -727,11 +751,15 @@ class _MainHomeContentState extends State<MainHomeContent>
     );
   }
 
+  // ----------------------------
+  // UI helpers
+  // ----------------------------
+
   Widget _glassPanel(
-    BuildContext context, {
-    required Widget child,
-    EdgeInsets? padding,
-  }) {
+      BuildContext context, {
+        required Widget child,
+        EdgeInsets? padding,
+      }) {
     final scheme = Theme.of(context).colorScheme;
     return ClipRRect(
       borderRadius: BorderRadius.circular(24),
@@ -758,11 +786,11 @@ class _MainHomeContentState extends State<MainHomeContent>
   }
 
   Widget _sectionHeader(
-    BuildContext context, {
-    required String title,
-    String? subtitle,
-    Widget? trailing,
-  }) {
+      BuildContext context, {
+        required String title,
+        String? subtitle,
+        Widget? trailing,
+      }) {
     final t = Theme.of(context).textTheme;
     final scheme = Theme.of(context).colorScheme;
 
@@ -775,8 +803,7 @@ class _MainHomeContentState extends State<MainHomeContent>
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(title,
-                    style: t.titleLarge?.copyWith(fontWeight: FontWeight.w900)),
+                Text(title, style: t.titleLarge?.copyWith(fontWeight: FontWeight.w900)),
                 if (subtitle != null) ...[
                   const SizedBox(height: 4),
                   Text(
@@ -797,12 +824,12 @@ class _MainHomeContentState extends State<MainHomeContent>
   }
 
   Widget _primaryActionChip(
-    BuildContext context, {
-    required IconData icon,
-    required String label,
-    required VoidCallback onPressed,
-    GlobalKey? key,
-  }) {
+      BuildContext context, {
+        required IconData icon,
+        required String label,
+        required VoidCallback onPressed,
+        GlobalKey? key,
+      }) {
     final scheme = Theme.of(context).colorScheme;
 
     return Material(
@@ -822,9 +849,9 @@ class _MainHomeContentState extends State<MainHomeContent>
               Text(
                 label,
                 style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                      color: scheme.onPrimary,
-                      fontWeight: FontWeight.w800,
-                    ),
+                  color: scheme.onPrimary,
+                  fontWeight: FontWeight.w800,
+                ),
               ),
             ],
           ),
@@ -870,6 +897,10 @@ class _MainHomeContentState extends State<MainHomeContent>
     );
   }
 
+  // ----------------------------
+  // BUILD
+  // ----------------------------
+
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
@@ -880,24 +911,19 @@ class _MainHomeContentState extends State<MainHomeContent>
     final user = FirebaseAuth.instance.currentUser;
     final isSignedIn = user != null;
 
-    // ✅ iOS-en nincs banner, ezért ne foglaljunk helyet alul
-    final extraBottomPadding =
-        Platform.isAndroid ? (bannerHeight + bottomInset) : bottomInset;
-
     return FadeTransition(
       opacity: _fadeIn,
       child: Stack(
         children: [
           Padding(
-            padding: EdgeInsets.only(bottom: extraBottomPadding),
+            padding: EdgeInsets.only(bottom: bannerHeight + bottomInset),
             child: NotificationListener<OverscrollIndicatorNotification>(
               onNotification: (n) {
                 n.disallowIndicator();
                 return false;
               },
               child: CustomScrollView(
-                physics: const BouncingScrollPhysics(
-                    parent: AlwaysScrollableScrollPhysics()),
+                physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
                 slivers: [
                   SliverAppBar(
                     pinned: false,
@@ -929,26 +955,20 @@ class _MainHomeContentState extends State<MainHomeContent>
                               children: [
                                 Text(
                                   isSignedIn ? 'Áttekintés' : 'Kezdőlap',
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .titleLarge
-                                      ?.copyWith(
-                                        fontWeight: FontWeight.w900,
-                                        letterSpacing: -0.2,
-                                      ),
+                                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                                    fontWeight: FontWeight.w900,
+                                    letterSpacing: -0.2,
+                                  ),
                                 ),
                                 const SizedBox(height: 8),
                                 Text(
                                   isSignedIn
                                       ? 'Üdvözlünk, $_displayName. Itt eléred az előrejelzést, statisztikát és a közösségi feedet.'
                                       : 'Böngészd a közösségi feedet. A teljes funkciókhoz jelentkezz be.',
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .bodyLarge
-                                      ?.copyWith(
-                                        color: scheme.onSurfaceVariant,
-                                        height: 1.25,
-                                      ),
+                                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                                    color: scheme.onSurfaceVariant,
+                                    height: 1.25,
+                                  ),
                                 ),
                               ],
                             ),
@@ -1020,19 +1040,19 @@ class _MainHomeContentState extends State<MainHomeContent>
                                 : 'Böngészés elérhető, posztoláshoz bejelentkezés szükséges.',
                             trailing: isSignedIn
                                 ? _primaryActionChip(
-                                    context,
-                                    icon: Icons.add,
-                                    label: 'Új poszt',
-                                    key: _addPostKey,
-                                    onPressed: () {
-                                      AddPostDialog.show(
-                                        context,
-                                        onPostAdded: () async {
-                                          await _markPostedTodayAndReward(user!.uid);
-                                        },
-                                      );
-                                    },
-                                  )
+                              context,
+                              icon: Icons.add,
+                              label: 'Új poszt',
+                              key: _addPostKey,
+                              onPressed: () {
+                                AddPostDialog.show(
+                                  context,
+                                  onPostAdded: () async {
+                                    await _markPostedTodayAndReward(user!.uid);
+                                  },
+                                );
+                              },
+                            )
                                 : null,
                           ),
                         ],
@@ -1062,18 +1082,18 @@ class _MainHomeContentState extends State<MainHomeContent>
                             Text(
                               'Pecazom v$currentVersion',
                               style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                                    fontWeight: FontWeight.w800,
-                                    color: scheme.primary,
-                                  ),
+                                fontWeight: FontWeight.w800,
+                                color: scheme.primary,
+                              ),
                             ),
                             const SizedBox(height: 6),
                             Text(
                               'Visszajelzés: info@pecazom.hu',
                               textAlign: TextAlign.center,
                               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                    color: scheme.onSurfaceVariant,
-                                    height: 1.25,
-                                  ),
+                                color: scheme.onSurfaceVariant,
+                                height: 1.25,
+                              ),
                             ),
                           ],
                         ),
@@ -1085,20 +1105,21 @@ class _MainHomeContentState extends State<MainHomeContent>
             ),
           ),
 
-          // ✅ ADS csak Androidon (iOS-en teljesen kivesszük)
-          if (Platform.isAndroid)
-            const Positioned(
-              left: 0,
-              right: 0,
-              bottom: 0,
-              child: SafeArea(
-                top: false,
-                child: Center(
-                  child: BannerAdWidget(),
-                ),
+          const Positioned(
+            left: 0,
+            right: 0,
+            bottom: 0,
+            child: SafeArea(
+              top: false,
+              child: Center(
+                child: BannerAdWidget(),
               ),
             ),
+          ),
 
+          // ----------------------------
+          // STRICT FORCED UPDATE OVERLAY (TOPMOST)
+          // ----------------------------
           if (_forceBlocked)
             Positioned.fill(
               child: AbsorbPointer(
@@ -1125,16 +1146,16 @@ class _MainHomeContentState extends State<MainHomeContent>
                             Text(
                               'Frissítés kötelező',
                               style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                                    fontWeight: FontWeight.w900,
-                                  ),
+                                fontWeight: FontWeight.w900,
+                              ),
                               textAlign: TextAlign.center,
                             ),
                             const SizedBox(height: 8),
                             Text(
                               'A folytatáshoz frissítened kell az alkalmazást.\n'
-                              'Minimum verzió: ${_minVersion ?? "-"}\n'
-                              'Jelenlegi: $currentVersion'
-                              '${_latestVersion == null ? '' : '\nLegújabb: $_latestVersion'}',
+                                  'Minimum verzió: ${_minVersion ?? "-"}\n'
+                                  'Jelenlegi: $currentVersion'
+                                  '${_latestVersion == null ? '' : '\nLegújabb: $_latestVersion'}',
                               textAlign: TextAlign.center,
                             ),
                             const SizedBox(height: 14),
@@ -1160,6 +1181,247 @@ class _MainHomeContentState extends State<MainHomeContent>
 extension _ListX<E> on List<E> {
   E? elementAtOrNull(int i) => (i >= 0 && i < length) ? this[i] : null;
 }
+
+// ------------------------------------------------------------
+// Retention UI: DailyHubCard
+// ------------------------------------------------------------
+
+class DailyHubCard extends StatelessWidget {
+  final String displayName;
+  final bool isSignedIn;
+
+  final int streakDays;
+  final int level;
+  final double xpProgress;
+
+  final String bestWindow;
+
+  final String challengeText;
+  final double challengeProgress;
+
+  final bool claimedToday;
+  final VoidCallback? onClaim;
+
+  final VoidCallback onXpInfo;
+
+  const DailyHubCard({
+    super.key,
+    required this.displayName,
+    required this.isSignedIn,
+    required this.streakDays,
+    required this.level,
+    required this.xpProgress,
+    required this.bestWindow,
+    required this.challengeText,
+    required this.challengeProgress,
+    required this.claimedToday,
+    this.onClaim,
+    required this.onXpInfo,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final t = Theme.of(context).textTheme;
+
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(26),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+        child: Container(
+          padding: const EdgeInsets.all(18),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(26),
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                scheme.primary.withOpacity(0.30),
+                scheme.tertiary.withOpacity(0.18),
+                scheme.surface.withOpacity(0.88),
+              ],
+            ),
+            border: Border.all(color: scheme.outlineVariant.withOpacity(0.28)),
+            boxShadow: [
+              BoxShadow(
+                blurRadius: 30,
+                offset: const Offset(0, 16),
+                color: Colors.black.withOpacity(0.10),
+              )
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                isSignedIn ? 'Ma neked, $displayName' : 'Ma neked',
+                style: t.titleLarge?.copyWith(fontWeight: FontWeight.w900),
+              ),
+              const SizedBox(height: 10),
+              Text(
+                isSignedIn
+                    ? 'Napi ritmus, jutalmak és közösség egy felületen.'
+                    : 'Böngészhetsz, de a streak és jutalmak bejelentkezéssel érhetők el.',
+                style: t.bodyMedium?.copyWith(
+                  color: scheme.onSurfaceVariant,
+                  height: 1.2,
+                ),
+              ),
+              const SizedBox(height: 14),
+              Row(
+                children: [
+                  _miniMetric(
+                    context,
+                    icon: Icons.local_fire_department_rounded,
+                    title: 'Streak',
+                    value: isSignedIn ? '$streakDays nap' : '—',
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: _miniMetric(
+                      context,
+                      icon: Icons.schedule_rounded,
+                      title: 'Mai ablak',
+                      value: bestWindow,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 14),
+              Container(
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(20),
+                  color: scheme.surface.withOpacity(0.70),
+                  border: Border.all(color: scheme.outlineVariant.withOpacity(0.24)),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(Icons.flag_rounded, color: scheme.primary, size: 18),
+                        const SizedBox(width: 8),
+                        Text(
+                          'Mai kihívás',
+                          style: t.titleMedium?.copyWith(fontWeight: FontWeight.w900),
+                        ),
+                        const Spacer(),
+                        if (isSignedIn)
+                          Text(
+                            challengeProgress >= 1 ? 'Kész' : 'Folyamatban',
+                            style: t.labelLarge?.copyWith(
+                              fontWeight: FontWeight.w900,
+                              color: challengeProgress >= 1 ? scheme.primary : scheme.onSurfaceVariant,
+                            ),
+                          ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      challengeText,
+                      style: t.bodyMedium?.copyWith(
+                        color: scheme.onSurfaceVariant,
+                        height: 1.2,
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(999),
+                      child: LinearProgressIndicator(
+                        value: ((isSignedIn ? challengeProgress : 0.0).clamp(0.0, 1.0) as double),
+                        minHeight: 10,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        Text(
+                          isSignedIn ? 'Szint $level' : 'Szintek és XP',
+                          style: t.labelLarge?.copyWith(fontWeight: FontWeight.w900),
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(999),
+                            child: LinearProgressIndicator(
+                              value: ((isSignedIn ? xpProgress : 0.0).clamp(0.0, 1.0) as double),
+                              minHeight: 10,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        IconButton(
+                          tooltip: 'Hogyan szerezhetek XP-t?',
+                          onPressed: onXpInfo,
+                          icon: Icon(Icons.info_outline_rounded, color: scheme.primary),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 14),
+              if (isSignedIn)
+                FilledButton.icon(
+                  onPressed: claimedToday ? null : onClaim,
+                  icon: const Icon(Icons.card_giftcard_rounded),
+                  label: Text(claimedToday ? 'Mai jutalom felvéve' : 'Mai jutalom felvétele (+15 XP)'),
+                )
+              else
+                OutlinedButton.icon(
+                  onPressed: () {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('A bejelentkezés a jobb felső sarokból érhető el.')),
+                    );
+                  },
+                  icon: const Icon(Icons.login),
+                  label: const Text('Bejelentkezés a jutalmakért'),
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _miniMetric(
+      BuildContext context, {
+        required IconData icon,
+        required String title,
+        required String value,
+      }) {
+    final scheme = Theme.of(context).colorScheme;
+    final t = Theme.of(context).textTheme;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(18),
+        color: scheme.surface.withOpacity(0.70),
+        border: Border.all(color: scheme.outlineVariant.withOpacity(0.24)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 18, color: scheme.primary),
+          const SizedBox(width: 8),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(title, style: t.labelMedium?.copyWith(color: scheme.onSurfaceVariant)),
+              Text(value, style: t.labelLarge?.copyWith(fontWeight: FontWeight.w900)),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ------------------------------------------------------------
+// Immutable daily metrics model
+// ------------------------------------------------------------
 
 @immutable
 class _DailyMetrics {
