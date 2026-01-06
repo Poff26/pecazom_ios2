@@ -6,7 +6,7 @@
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 
 	<key>CFBundleDisplayName</key>
-	<string>Fishing App New</string>
+	<string>Pecazom</string>
 
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
@@ -18,7 +18,7 @@
 	<string>6.0</string>
 
 	<key>CFBundleName</key>
-	<string>fishing_app_new</string>
+	<string>Pecazom</string>
 
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
@@ -35,11 +35,50 @@
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 
-	<!-- Location permissions (required to avoid crash + App Store warnings) -->
+	<!-- App Transport Security: allow HTTPS only (recommended). -->
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<key>NSAllowsArbitraryLoads</key>
+		<false/>
+	</dict>
+
+	<!-- Location permissions -->
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>A Pecazom a tartózkodási helyedet a közeli horgászhelyek megjelenítéséhez és a helyalapú időjárás/kapási előrejelzéshez használja.</string>
+
 	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
 	<string>A Pecazom a tartózkodási helyedet a közeli horgászhelyek megjelenítéséhez és a helyalapú időjárás/kapási előrejelzéshez használja.</string>
+
+	<!-- If you ever enable background location updates, you will also need:
+	     1) UIBackgroundModes = location
+	     2) your code must justify it, otherwise App Review may reject. -->
+	<!--
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>location</string>
+	</array>
+	-->
+
+	<!-- Photos / Gallery permissions -->
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>A Pecazom a fotóidat a fogásaidhoz tartozó képek kiválasztásához használja.</string>
+
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>A Pecazom képet menthet a galériádba (például fogás fotójának mentése).</string>
+
+	<!-- Camera permission (safe to include even if not always used) -->
+	<key>NSCameraUsageDescription</key>
+	<string>A Pecazom a kamerát fogás fotó készítéséhez használja.</string>
+
+	<!-- Microphone permission (only needed if you record video with audio). Safe to include. -->
+	<key>NSMicrophoneUsageDescription</key>
+	<string>A Pecazom a mikrofont videó hang rögzítéséhez használja.</string>
+
+	<!-- If you use local network discovery (rare). Leave disabled unless needed. -->
+	<!--
+	<key>NSLocalNetworkUsageDescription</key>
+	<string>A Pecazom a helyi hálózatot eszközök felderítéséhez használja.</string>
+	-->
 
 	<key>UILaunchStoryboardName</key>
 	<string>LaunchScreen</string>
@@ -69,3 +108,4 @@
 	<true/>
 </dict>
 </plist>
+persze
