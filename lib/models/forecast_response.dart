@@ -1,4 +1,4 @@
-import 'package:fishing_app_flutter/widgets/weather/meteo_field_loader.dart';
+import 'package:fishing_app_flutter/models/weather_response.dart';
 import 'package:fishing_app_flutter/models/ai_response.dart';
 
 class WeatherForecastResponse {
