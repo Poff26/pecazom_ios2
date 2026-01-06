@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:io';
+import 'dart:ui';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -12,13 +13,13 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:in_app_update/in_app_update.dart';
-import 'package:video_player/video_player.dart';
 
 import 'screens/home_screen.dart';
 import 'screens/subscription_screen.dart';
 
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
-final FlutterLocalNotificationsPlugin _localNotif = FlutterLocalNotificationsPlugin();
+final FlutterLocalNotificationsPlugin _localNotif =
+    FlutterLocalNotificationsPlugin();
 
 const AndroidNotificationChannel _channel = AndroidNotificationChannel(
   'high_importance_channel',
@@ -29,7 +30,6 @@ const AndroidNotificationChannel _channel = AndroidNotificationChannel(
 
 @pragma('vm:entry-point')
 Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
-  // Background isolate-ban is kell init
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
@@ -38,7 +38,6 @@ Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Ha iOS-en “csak kilép”, sokszor egy uncaught exception/abort van a háttérben.
   FlutterError.onError = (details) {
     debugPrint('FlutterError: ${details.exceptionAsString()}');
     debugPrint('${details.stack}');
@@ -52,70 +51,37 @@ Future<void> main() async {
 
   debugPrint('MAIN: start');
 
-  // Firebase init
-  try {
-    debugPrint('MAIN: before Firebase.initializeApp');
-    await Firebase.initializeApp(
-      options: DefaultFirebaseOptions.currentPlatform,
-    );
-    debugPrint('MAIN: after Firebase.initializeApp');
-  } catch (e, st) {
-    debugPrint('MAIN: Firebase init ERROR: $e');
-    debugPrint('$st');
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
+
+  FirebaseMessaging.onBackgroundMessage(
+    firebaseMessagingBackgroundHandler,
+  );
+
+  // Ads csak Androidon
+  if (Platform.isAndroid) {
+    try {
+      await MobileAds.instance
+          .initialize()
+          .timeout(const Duration(seconds: 6));
+    } catch (_) {}
   }
 
-  // Background handler regisztrálás
-  FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
-
-  // Ads init:
-  // iOS-en a Google Mobile Ads SDK gyakran “hard exit”-et okoz, ha nincs Info.plist-ben GADApplicationIdentifier.
-  // Ezért iOS-en most kihagyjuk, amíg nincs rendesen beállítva.
-  try {
-    if (Platform.isAndroid) {
-      debugPrint('MAIN: before MobileAds.initialize (Android only)');
-      await MobileAds.instance.initialize().timeout(const Duration(seconds: 6));
-      debugPrint('MAIN: after MobileAds.initialize');
-    } else {
-      debugPrint('MAIN: MobileAds skipped (not Android)');
-    }
-  } catch (e, st) {
-    debugPrint('MAIN: MobileAds init WARNING: $e');
-    debugPrint('$st');
-  }
-
-  // Theme pref
   bool isDarkMode = false;
   try {
-    debugPrint('MAIN: before SharedPreferences.getInstance');
-    final prefs = await SharedPreferences.getInstance().timeout(const Duration(seconds: 4));
+    final prefs = await SharedPreferences.getInstance();
     isDarkMode = prefs.getBool('darkMode') ?? false;
-    debugPrint('MAIN: after SharedPreferences.getInstance (dark=$isDarkMode)');
-  } catch (e, st) {
-    debugPrint('MAIN: SharedPreferences WARNING: $e');
-    debugPrint('$st');
-  }
+  } catch (_) {}
 
-  // Local notifications init (Android + iOS)
-  try {
-    debugPrint('MAIN: before _initLocalNotifications');
-    await _initLocalNotifications().timeout(const Duration(seconds: 8));
-    debugPrint('MAIN: after _initLocalNotifications');
-  } catch (e, st) {
-    debugPrint('MAIN: LocalNotifications WARNING: $e');
-    debugPrint('$st');
-  }
+  await _initLocalNotifications();
 
   runApp(FishingApp(initialDarkMode: isDarkMode));
-  debugPrint('MAIN: after runApp');
 }
 
 Future<void> _initLocalNotifications() async {
   const androidInit = AndroidInitializationSettings('@mipmap/ic_launcher');
-  const darwinInit = DarwinInitializationSettings(
-    requestAlertPermission: false,
-    requestBadgePermission: false,
-    requestSoundPermission: false,
-  );
+  const darwinInit = DarwinInitializationSettings();
 
   const initSettings = InitializationSettings(
     android: androidInit,
@@ -124,9 +90,9 @@ Future<void> _initLocalNotifications() async {
 
   await _localNotif.initialize(initSettings);
 
-  // Android channel only
   final androidPlugin =
-      _localNotif.resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
+      _localNotif.resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin>();
   await androidPlugin?.createNotificationChannel(_channel);
 }
 
@@ -145,47 +111,13 @@ class _FishingAppState extends State<FishingApp> {
   void initState() {
     super.initState();
     isDarkTheme = widget.initialDarkMode;
-    _initPushNotifications();
+    _initPush();
   }
 
-  Future<void> _initPushNotifications() async {
+  Future<void> _initPush() async {
     try {
-      final messaging = FirebaseMessaging.instance;
-
-      // iOS-en ez csak permission, Androidon is működik (runtime nincs gond)
-      await messaging.requestPermission();
-
-      // Foreground notification megjelenítés: csak Androidon mutatjuk local notif-fal
-      FirebaseMessaging.onMessage.listen((msg) {
-        final notif = msg.notification;
-        if (notif == null || !Platform.isAndroid) return;
-
-        _localNotif.show(
-          notif.hashCode,
-          notif.title,
-          notif.body,
-          NotificationDetails(
-            android: AndroidNotificationDetails(
-              _channel.id,
-              _channel.name,
-              channelDescription: _channel.description,
-              importance: Importance.high,
-              priority: Priority.high,
-            ),
-          ),
-        );
-      });
-
-      FirebaseMessaging.onMessageOpenedApp.listen((msg) {
-        final route = msg.data['route'];
-        if (route is String) {
-          navigatorKey.currentState?.pushNamed(route);
-        }
-      });
-    } catch (e, st) {
-      debugPrint('PUSH INIT WARNING: $e');
-      debugPrint('$st');
-    }
+      await FirebaseMessaging.instance.requestPermission();
+    } catch (_) {}
   }
 
   Future<void> toggleTheme() async {
@@ -194,60 +126,29 @@ class _FishingAppState extends State<FishingApp> {
     await prefs.setBool('darkMode', isDarkTheme);
   }
 
-  ThemeData _buildLightTheme() {
-    final scheme = ColorScheme.fromSeed(seedColor: Colors.lightBlue);
-    return ThemeData(useMaterial3: true, colorScheme: scheme);
-  }
-
-  ThemeData _buildDarkTheme() {
-    final scheme = ColorScheme.fromSeed(
-      seedColor: Colors.lightBlue,
-      brightness: Brightness.dark,
-    );
-    return ThemeData(useMaterial3: true, colorScheme: scheme);
-  }
-
-  Route<dynamic> _onGenerateRoute(RouteSettings settings) {
-    switch (settings.name) {
-      case '/':
-        return MaterialPageRoute(
-          builder: (_) => BootLoader(
-            isDarkTheme: isDarkTheme,
-            onToggleTheme: toggleTheme,
-          ),
-        );
-
-      case '/subscription':
-        return MaterialPageRoute(
-          builder: (_) => const SubscriptionScreen(),
-        );
-
-      default:
-        return MaterialPageRoute(
-          builder: (_) => const Scaffold(
-            body: Center(child: Text('Ismeretlen oldal')),
-          ),
-        );
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       navigatorKey: navigatorKey,
       debugShowCheckedModeBanner: false,
       title: 'Pecazom',
-      theme: _buildLightTheme(),
-      darkTheme: _buildDarkTheme(),
       themeMode: isDarkTheme ? ThemeMode.dark : ThemeMode.light,
-      initialRoute: '/',
-      onGenerateRoute: _onGenerateRoute,
+      theme: ThemeData(useMaterial3: true),
+      darkTheme:
+          ThemeData(useMaterial3: true, brightness: Brightness.dark),
+      home: BootLoader(
+        isDarkTheme: isDarkTheme,
+        onToggleTheme: toggleTheme,
+      ),
+      routes: {
+        '/subscription': (_) => const SubscriptionScreen(),
+      },
     );
   }
 }
 
 /* ============================================================
-   BOOT LOADER + LOADING VIDEO + “SAFE” PLAY UPDATE CHECK
+   SAFE BOOT LOADER (NO VIDEO, NO ASSETS)
    ============================================================ */
 
 class BootLoader extends StatefulWidget {
@@ -264,157 +165,31 @@ class BootLoader extends StatefulWidget {
   State<BootLoader> createState() => _BootLoaderState();
 }
 
-class _BootLoaderState extends State<BootLoader> with WidgetsBindingObserver {
+class _BootLoaderState extends State<BootLoader> {
   bool _ready = false;
-  bool _checkingUpdate = false;
 
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addObserver(this);
     _boot();
   }
 
-  @override
-  void dispose() {
-    WidgetsBinding.instance.removeObserver(this);
-    super.dispose();
-  }
-
-  @override
-  void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.resumed) {
-      _checkImmediateUpdateIfNeeded();
-    }
-  }
-
   Future<void> _boot() async {
-    unawaited(_checkImmediateUpdateIfNeeded());
-    await Future.delayed(const Duration(milliseconds: 900));
-
-    if (!mounted) return;
-    setState(() => _ready = true);
+    await Future.delayed(const Duration(milliseconds: 600));
+    if (mounted) setState(() => _ready = true);
   }
 
-  Future<void> _checkImmediateUpdateIfNeeded() async {
-    if (!Platform.isAndroid) return;
-    if (_checkingUpdate) return;
-    _checkingUpdate = true;
-
-    if (kDebugMode) {
-      debugPrint('UPDATE: skipped in debug mode');
-      _checkingUpdate = false;
-      return;
-    }
-
-    try {
-      debugPrint('UPDATE: checkForUpdate() start');
-      final info = await InAppUpdate.checkForUpdate().timeout(const Duration(seconds: 6));
-
-      debugPrint(
-        'UPDATE: availability=${info.updateAvailability}, '
-        'immediateAllowed=${info.immediateUpdateAllowed}, '
-        'flexibleAllowed=${info.flexibleUpdateAllowed}',
+  @override
+  Widget build(BuildContext context) {
+    if (!_ready) {
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
       );
-
-      final available = info.updateAvailability == UpdateAvailability.updateAvailable;
-      final allowed = info.immediateUpdateAllowed;
-
-      if (available && allowed) {
-        debugPrint('UPDATE: performImmediateUpdate() start');
-        await InAppUpdate.performImmediateUpdate().timeout(const Duration(seconds: 30));
-        debugPrint('UPDATE: performImmediateUpdate() done');
-      }
-    } on TimeoutException catch (_) {
-      debugPrint('UPDATE: timeout (non-blocking)');
-    } catch (e, st) {
-      debugPrint('UPDATE: error (non-blocking): $e');
-      debugPrint('$st');
-    } finally {
-      _checkingUpdate = false;
     }
-  }
 
-  @override
-  Widget build(BuildContext context) {
-    return Stack(
-      children: [
-        AnimatedOpacity(
-          opacity: _ready ? 0 : 1,
-          duration: const Duration(milliseconds: 300),
-          child: const _LogoLoaderView(),
-        ),
-        AnimatedOpacity(
-          opacity: _ready ? 1 : 0,
-          duration: const Duration(milliseconds: 400),
-          child: IgnorePointer(
-            ignoring: !_ready,
-            child: HomeScreen(
-              isDarkTheme: widget.isDarkTheme,
-              onToggleTheme: widget.onToggleTheme,
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-/* ============================================================
-   LOADING VIDEO VIEW (MP4)
-   ============================================================ */
-
-class _LogoLoaderView extends StatefulWidget {
-  const _LogoLoaderView();
-
-  @override
-  State<_LogoLoaderView> createState() => _LogoLoaderViewState();
-}
-
-class _LogoLoaderViewState extends State<_LogoLoaderView> {
-  late final VideoPlayerController _controller;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = VideoPlayerController.asset('assets/video/loader.mp4')
-      ..initialize().then((_) {
-        if (!mounted) return;
-        _controller
-          ..setLooping(true)
-          ..play();
-        setState(() {});
-      });
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-
-    return Scaffold(
-      backgroundColor: scheme.surface,
-      body: Center(
-        child: _controller.value.isInitialized
-            ? SizedBox(
-                width: 180,
-                height: 180,
-                child: FittedBox(
-                  fit: BoxFit.contain,
-                  child: SizedBox(
-                    width: _controller.value.size.width,
-                    height: _controller.value.size.height,
-                    child: VideoPlayer(_controller),
-                  ),
-                ),
-              )
-            : const SizedBox.shrink(),
-      ),
+    return HomeScreen(
+      isDarkTheme: widget.isDarkTheme,
+      onToggleTheme: widget.onToggleTheme,
     );
   }
 }
