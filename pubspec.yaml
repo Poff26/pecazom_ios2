@@ -2,7 +2,7 @@ name: fishing_app_flutter
 description: "Fishing app – Flutter, Firebase, Maps, AI forecast"
 publish_to: 'none'
 
-version: 2.0.2+21
+version: 2.0.2+22
 
 environment:
   sdk: '>=3.8.0 <4.0.0'
