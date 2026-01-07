@@ -1,8 +1,11 @@
 workflows:
   ios_testflight:
-    name: iOS • Tests + TestFlight
+    name: iOS Tests + TestFlight
     max_build_duration: 90
     instance_type: mac_mini_m2
+
+    integrations:
+      app_store_connect: appstore
 
     environment:
       flutter: stable
@@ -14,27 +17,20 @@ workflows:
     scripts:
       - name: Flutter doctor
         script: flutter doctor -v
-
       - name: Get packages
         script: flutter pub get
-
       - name: Run tests
         script: flutter test
-
       - name: Install CocoaPods
         script: |
           cd ios
           pod install
           cd ..
-
-      # iOS build SIGNED (no --no-codesign)
       - name: Build IPA for App Store
-        script: |
-          flutter build ipa --release
+        script: flutter build ipa --release
 
     artifacts:
       - build/ios/ipa/*.ipa
-      - flutter_drive.log
 
     publishing:
       app_store_connect:
