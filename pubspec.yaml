@@ -1,6 +1,6 @@
 workflows:
   ios_testflight:
-    name: iOS • Tests + TestFlight
+    name: "iOS • Tests + TestFlight"
     max_build_duration: 90
     instance_type: mac_mini_m2
 
