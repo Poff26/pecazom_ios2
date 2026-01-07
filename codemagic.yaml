@@ -1,27 +1,42 @@
 workflows:
-  ios-release:
-    name: iOS Release
-    max_build_duration: 60
+  ios_testflight:
+    name: iOS • Tests + TestFlight
+    max_build_duration: 90
     instance_type: mac_mini_m2
 
     environment:
       flutter: stable
       xcode: latest
       cocoapods: default
+      vars:
+        BUNDLE_ID: "com.pecazom.app"
 
     scripts:
-      - name: Flutter packages
+      - name: Flutter doctor
+        script: flutter doctor -v
+
+      - name: Get packages
         script: flutter pub get
 
-      - name: iOS build (no codesign)
-        script: flutter build ios --release --no-codesign
+      - name: Run tests
+        script: flutter test
+
+      - name: Install CocoaPods
+        script: |
+          cd ios
+          pod install
+          cd ..
+
+      # iOS build SIGNED (no --no-codesign)
+      - name: Build IPA for App Store
+        script: |
+          flutter build ipa --release
 
     artifacts:
-      - build/ios/iphoneos/Runner.app
-      - build/**/outputs/**/*.apk
-      - build/**/outputs/**/*.aab
+      - build/ios/ipa/*.ipa
+      - flutter_drive.log
 
     publishing:
-      email:
-        recipients:
-          - marcel.kovacs07@gmail.com
+      app_store_connect:
+        auth: integration
+        submit_to_testflight: true
