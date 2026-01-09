@@ -30,7 +30,7 @@ dependencies:
   in_app_purchase_storekit: ^0.4.7
   google_mobile_ads: ^7.0.0
 
-  # Firebase (egymással kompatibilis verziók)
+  # Firebase
   firebase_core: ^4.3.0
   firebase_auth: ^6.1.3
   cloud_firestore: ^6.1.1
@@ -66,18 +66,19 @@ dev_dependencies:
   flutter_lints: ^6.0.0
 
 # ============================================================
-# APP ICON
+# APP ICON (iOS + Android) – FIXED
 # ============================================================
 
 flutter_launcher_icons:
   android: true
   ios: true
-  image_path: assets/pecazom_icon_512.png
+  image_path: assets/pecazom_icon_1024.png
+  remove_alpha_ios: true
   adaptive_icon_background: "#FFFFFF"
-  adaptive_icon_foreground: assets/pecazom_icon_512.png
+  adaptive_icon_foreground: assets/pecazom_icon_1024.png
 
 # ============================================================
-# NATIVE SPLASH – ANDROID 12 FIX
+# NATIVE SPLASH
 # ============================================================
 
 flutter_native_splash:
