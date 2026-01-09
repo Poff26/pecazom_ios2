@@ -2,7 +2,7 @@
 //
 // Profi, gyors, offline-clusteres térkép:
 // - a te JSON-odat használja: assets/horgaszvizek_flutter_ready.json
-// - körös cluster számmal (mint a mintaképen)
+// - körös cluster számmal
 // - zoomra szétesik
 // - kereső
 // - marker tap -> bottom sheet (kép + leírás)
@@ -80,12 +80,12 @@ class FlusterPoint extends Clusterable {
     required bool isCluster,
     required int pointsSize,
   }) : super(
-    latitude: position.latitude,
-    longitude: position.longitude,
-    isCluster: isCluster,
-    pointsSize: pointsSize,
-    markerId: id,
-  );
+          latitude: position.latitude,
+          longitude: position.longitude,
+          isCluster: isCluster,
+          pointsSize: pointsSize,
+          markerId: id,
+        );
 }
 
 class MapScreen extends StatefulWidget {
@@ -96,7 +96,7 @@ class MapScreen extends StatefulWidget {
 }
 
 class _MapScreenState extends State<MapScreen> {
-  // Assets a te screenshotod alapján
+  // Assets
   static const String _pointsAsset = 'assets/horgaszvizek_flutter_ready.json';
   static const String _pointIconAsset = 'assets/icons/water.png';
 
@@ -126,6 +126,29 @@ class _MapScreenState extends State<MapScreen> {
   // Cluster icon cache
   final Map<int, BitmapDescriptor> _clusterIconCache = {};
 
+  // ---- iOS/Android konzisztens asset marker resize ----
+  Future<BitmapDescriptor> _bitmapDescriptorFromAssetResized(
+    String assetPath, {
+    required int targetWidthPx,
+  }) async {
+    final data = await rootBundle.load(assetPath);
+    final codec = await ui.instantiateImageCodec(
+      data.buffer.asUint8List(),
+      targetWidth: targetWidthPx,
+    );
+    final frame = await codec.getNextFrame();
+    final bytes = await frame.image.toByteData(format: ui.ImageByteFormat.png);
+    return BitmapDescriptor.fromBytes(bytes!.buffer.asUint8List());
+  }
+
+  double _dpr() {
+    // stabil DPR lekérés
+    final views = ui.PlatformDispatcher.instance.views;
+    if (views.isEmpty) return 1.0;
+    return views.first.devicePixelRatio;
+    // (alternatíva: MediaQuery.of(context).devicePixelRatio, de initState-ben még nincs)
+  }
+
   @override
   void initState() {
     super.initState();
@@ -147,11 +170,14 @@ class _MapScreenState extends State<MapScreen> {
 
   Future<void> _init() async {
     try {
-      // pont ikon
+      // pont ikon - resize, hogy iOS-en se legyen óriás
+      final dpr = _dpr();
+      final iconPx = (36 * dpr).round(); // 36 logical px
+
       try {
-        _pointIcon = await BitmapDescriptor.fromAssetImage(
-          const ImageConfiguration(size: Size(56, 56)),
+        _pointIcon = await _bitmapDescriptorFromAssetResized(
           _pointIconAsset,
+          targetWidthPx: iconPx,
         );
       } catch (_) {
         _pointIcon = BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueAzure);
@@ -186,7 +212,7 @@ class _MapScreenState extends State<MapScreen> {
       _fluster = Fluster<FlusterPoint>(
         minZoom: 0,
         maxZoom: 20,
-        radius: 170, // nagyobb radius -> országos nézetben szépen összevon
+        radius: 170,
         extent: 2048,
         nodeSize: 64,
         points: points,
@@ -257,10 +283,19 @@ class _MapScreenState extends State<MapScreen> {
     final cached = _clusterIconCache[bucket];
     if (cached != null) return cached;
 
-    const int size = 160;
+    // iOS-en a fix 160 túl nagy tud lenni -> DPR-rel logikai méretből számolunk
+    final dpr = _dpr();
+    final int size = (72 * dpr).round(); // 72 logical px
+    final double s = size.toDouble();
     final recorder = ui.PictureRecorder();
     final canvas = Canvas(recorder);
-    final center = const Offset(size / 2, size / 2);
+    final center = Offset(s / 2, s / 2);
+
+    // arányos sugarak (a korábbi 160-as verzióhoz igazítva)
+    final rShadow = s * 0.40;
+    final rOuter = s * 0.3875;
+    final rWhite = s * 0.3125;
+    final rInner = s * 0.275;
 
     // színezés a mennyiség alapján (kék -> narancs -> zöld)
     final Color outer;
@@ -279,20 +314,20 @@ class _MapScreenState extends State<MapScreen> {
     // shadow
     final shadow = Paint()
       ..color = Colors.black.withOpacity(0.22)
-      ..maskFilter = const ui.MaskFilter.blur(ui.BlurStyle.normal, 14);
-    canvas.drawCircle(center, 64, shadow);
+      ..maskFilter = ui.MaskFilter.blur(ui.BlurStyle.normal, s * 0.085);
+    canvas.drawCircle(center, rShadow, shadow);
 
     // outer ring
     final pOuter = Paint()..color = outer;
-    canvas.drawCircle(center, 62, pOuter);
+    canvas.drawCircle(center, rOuter, pOuter);
 
     // white ring
     final pWhite = Paint()..color = Colors.white;
-    canvas.drawCircle(center, 50, pWhite);
+    canvas.drawCircle(center, rWhite, pWhite);
 
     // inner fill
     final pInner = Paint()..color = inner;
-    canvas.drawCircle(center, 44, pInner);
+    canvas.drawCircle(center, rInner, pInner);
 
     // text formatting
     final text = count >= 1000 ? '${(count / 1000).toStringAsFixed(1)}k' : count.toString();
@@ -300,8 +335,8 @@ class _MapScreenState extends State<MapScreen> {
     final tp = TextPainter(
       text: TextSpan(
         text: text,
-        style: const TextStyle(
-          fontSize: 42,
+        style: TextStyle(
+          fontSize: s * 0.26,
           color: Colors.white,
           fontWeight: FontWeight.w900,
           letterSpacing: 0.2,
@@ -328,7 +363,6 @@ class _MapScreenState extends State<MapScreen> {
     final clusters = fl.clusters([-180, -85, 180, 85], _zoom.toInt());
     final q = _query;
 
-    // párhuzamosan építjük, hogy gyors legyen
     final futures = clusters.map((p) async {
       // csak a sima pontokra szűrünk név alapján
       if (p.isCluster != true && !_matches(p.name, q)) return null;
@@ -339,6 +373,7 @@ class _MapScreenState extends State<MapScreen> {
           markerId: MarkerId(p.id),
           position: p.position,
           icon: await _clusterIcon(count),
+          anchor: const Offset(0.5, 0.5), // kör: középre
           consumeTapEvents: true,
           onTap: () async {
             final c = _ctrl;
@@ -359,6 +394,7 @@ class _MapScreenState extends State<MapScreen> {
           markerId: MarkerId(p.id),
           position: p.position,
           icon: _pointIcon ?? BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueAzure),
+          anchor: const Offset(0.5, 1.0), // pin talpa a koordinátán
           consumeTapEvents: true,
           onTap: () {
             if (w != null) _showWaterSheet(w);
@@ -507,12 +543,12 @@ class _MapScreenState extends State<MapScreen> {
               suffixIcon: _query.trim().isEmpty
                   ? null
                   : IconButton(
-                icon: const Icon(Icons.clear),
-                onPressed: () {
-                  _searchCtrl.clear();
-                  FocusScope.of(context).unfocus();
-                },
-              ),
+                      icon: const Icon(Icons.clear),
+                      onPressed: () {
+                        _searchCtrl.clear();
+                        FocusScope.of(context).unfocus();
+                      },
+                    ),
               contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
             ),
           ),
