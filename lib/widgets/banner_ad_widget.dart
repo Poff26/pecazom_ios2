@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:flutter/foundation.dart' show kReleaseMode;
 import 'package:flutter/material.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 
@@ -13,17 +14,24 @@ class _BannerAdWidgetState extends State<BannerAdWidget> {
   BannerAd? _ad;
   bool _loaded = false;
 
-  // Első körben TESZT ID-t használunk, hogy biztosan lásd, hogy működik.
+  // Google teszt ID-k (debughoz)
   String get _testBannerId => Platform.isAndroid
       ? 'ca-app-pub-3940256099942544/6300978111'
       : 'ca-app-pub-3940256099942544/2934735716';
+
+  // SAJÁT éles ID-k (release-hez) – iOS-re is külön legyen AdMobban, ha van
+  String get _prodBannerId => Platform.isAndroid
+      ? 'ca-app-pub-6845395018275004/5491363694'
+      : 'ca-app-pub-6845395018275004/5491363694';
+
+  String get _bannerId => kReleaseMode ? _prodBannerId : _testBannerId;
 
   @override
   void initState() {
     super.initState();
 
     _ad = BannerAd(
-      adUnitId: _testBannerId,
+      adUnitId: _bannerId,
       size: AdSize.banner,
       request: const AdRequest(),
       listener: BannerAdListener(
