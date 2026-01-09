@@ -1,3 +1,4 @@
+```dart
 import 'dart:convert';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -272,12 +273,14 @@ class _AdminOverviewTabState extends State<AdminOverviewTab> {
               child: Icon(icon, color: tint),
             ),
             const SizedBox(width: 12),
-            Expanded(
+
+            // ✅ FIX: Expanded -> Flexible(loose) (iOS overflow megszűnik)
+            Flexible(
+              fit: FlexFit.loose,
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // ✅ FIX: 2 sor + ellipsis -> iOS-on sem overflow-ol
                   Text(
                     title,
                     maxLines: 2,
@@ -288,8 +291,7 @@ class _AdminOverviewTabState extends State<AdminOverviewTab> {
                       fontWeight: FontWeight.w700,
                     ),
                   ),
-                  const SizedBox(height: 6),
-                  // ✅ FIX: FittedBox helyett stabil Text (kevesebb rounding/overflow)
+                  const SizedBox(height: 4),
                   Text(
                     value,
                     maxLines: 1,
@@ -321,7 +323,6 @@ class _AdminOverviewTabState extends State<AdminOverviewTab> {
           ),
           const SizedBox(height: 8),
 
-          // ✅ FIX: nagyobb cellamagasság (92 -> 110) -> megszűnik a bottom overflow
           GridView.builder(
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
@@ -330,7 +331,7 @@ class _AdminOverviewTabState extends State<AdminOverviewTab> {
               crossAxisCount: 2,
               mainAxisSpacing: 12,
               crossAxisSpacing: 12,
-              mainAxisExtent: 110,
+              mainAxisExtent: 120, // ✅ ha még kényes: 130-140 is mehet
             ),
             itemBuilder: (context, index) {
               switch (index) {
@@ -553,8 +554,7 @@ class _AdminOverviewTabState extends State<AdminOverviewTab> {
                       children: [
                         CircleAvatar(
                           backgroundColor: scheme.primary.withOpacity(0.15),
-                          child:
-                              Icon(Icons.person_outline, color: scheme.primary),
+                          child: Icon(Icons.person_outline, color: scheme.primary),
                         ),
                         const SizedBox(width: 12),
                         Expanded(
@@ -578,8 +578,7 @@ class _AdminOverviewTabState extends State<AdminOverviewTab> {
                                   style: Theme.of(context)
                                       .textTheme
                                       .bodySmall
-                                      ?.copyWith(
-                                          color: scheme.onSurfaceVariant),
+                                      ?.copyWith(color: scheme.onSurfaceVariant),
                                 ),
                             ],
                           ),
@@ -590,8 +589,7 @@ class _AdminOverviewTabState extends State<AdminOverviewTab> {
                           underline: const SizedBox.shrink(),
                           items: const [
                             DropdownMenuItem(value: 'user', child: Text('user')),
-                            DropdownMenuItem(
-                                value: 'admin', child: Text('admin')),
+                            DropdownMenuItem(value: 'admin', child: Text('admin')),
                           ],
                           onChanged: (newRole) async {
                             if (newRole == null) return;
@@ -761,10 +759,8 @@ class RecordReviewTab extends StatelessWidget {
         final docs = snapshot.data!.docs.toList();
 
         docs.sort((a, b) {
-          final ta =
-              _tsFrom(a.data()['submittedAt'])?.millisecondsSinceEpoch ?? 0;
-          final tb =
-              _tsFrom(b.data()['submittedAt'])?.millisecondsSinceEpoch ?? 0;
+          final ta = _tsFrom(a.data()['submittedAt'])?.millisecondsSinceEpoch ?? 0;
+          final tb = _tsFrom(b.data()['submittedAt'])?.millisecondsSinceEpoch ?? 0;
           return tb.compareTo(ta);
         });
 
@@ -1146,8 +1142,7 @@ class _ReportReviewTabState extends State<ReportReviewTab> {
                                     style: Theme.of(context)
                                         .textTheme
                                         .bodySmall
-                                        ?.copyWith(
-                                            color: scheme.onSurfaceVariant),
+                                        ?.copyWith(color: scheme.onSurfaceVariant),
                                   ),
                                 ),
                                 if (timeStr.isNotEmpty)
@@ -1156,8 +1151,7 @@ class _ReportReviewTabState extends State<ReportReviewTab> {
                                     style: Theme.of(context)
                                         .textTheme
                                         .bodySmall
-                                        ?.copyWith(
-                                            color: scheme.onSurfaceVariant),
+                                        ?.copyWith(color: scheme.onSurfaceVariant),
                                   ),
                               ],
                             ),
@@ -1168,9 +1162,7 @@ class _ReportReviewTabState extends State<ReportReviewTab> {
                                     ? "Eltiltva eddig: ${bannedUntil.toDate().toLocal().toString().split('.')[0]}"
                                     : "Véglegesen kitiltva",
                                 style: TextStyle(
-                                  color: bannedUntil != null
-                                      ? Colors.orange
-                                      : Colors.red,
+                                  color: bannedUntil != null ? Colors.orange : Colors.red,
                                   fontWeight: FontWeight.w800,
                                 ),
                               ),
@@ -1183,8 +1175,7 @@ class _ReportReviewTabState extends State<ReportReviewTab> {
                                   style: Theme.of(context)
                                       .textTheme
                                       .bodySmall
-                                      ?.copyWith(
-                                          color: scheme.onSurfaceVariant),
+                                      ?.copyWith(color: scheme.onSurfaceVariant),
                                 ),
                               ],
                             ] else ...[
@@ -1200,16 +1191,14 @@ class _ReportReviewTabState extends State<ReportReviewTab> {
                                   OutlinedButton.icon(
                                     onPressed: postAuthorId.isEmpty
                                         ? null
-                                        : () => banUser(postAuthorId,
-                                            permanent: false),
+                                        : () => banUser(postAuthorId, permanent: false),
                                     icon: const Icon(Icons.timer_off),
                                     label: const Text("7 nap tiltás"),
                                   ),
                                   OutlinedButton.icon(
                                     onPressed: postAuthorId.isEmpty
                                         ? null
-                                        : () => banUser(postAuthorId,
-                                            permanent: true),
+                                        : () => banUser(postAuthorId, permanent: true),
                                     icon: const Icon(Icons.block),
                                     label: const Text("Végleges ban"),
                                   ),
@@ -1219,8 +1208,7 @@ class _ReportReviewTabState extends State<ReportReviewTab> {
                                           ? null
                                           : () => unbanUser(postAuthorId),
                                       icon: const Icon(Icons.undo),
-                                      label:
-                                          const Text("Tiltás visszavonása"),
+                                      label: const Text("Tiltás visszavonása"),
                                     ),
                                 ],
                               ),
@@ -1317,3 +1305,4 @@ class PostDetailScreen extends StatelessWidget {
     );
   }
 }
+```
