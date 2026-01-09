@@ -258,7 +258,7 @@ class _AdminOverviewTabState extends State<AdminOverviewTab> {
     }) {
       return _Ui.glassCard(
         context,
-        padding: const EdgeInsets.all(12), // ✅ kisebb padding, több hely
+        padding: const EdgeInsets.all(12),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
@@ -274,27 +274,27 @@ class _AdminOverviewTabState extends State<AdminOverviewTab> {
             const SizedBox(width: 12),
             Expanded(
               child: Column(
-                mainAxisSize: MainAxisSize.min, // ✅ ne próbáljon „kitölteni”
+                mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  // ✅ FIX: 2 sor + ellipsis -> iOS-on sem overflow-ol
                   Text(
                     title,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis, // ✅ ne csússzon szét
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    softWrap: true,
                     style: t.bodyMedium?.copyWith(
                       color: scheme.onSurfaceVariant,
                       fontWeight: FontWeight.w700,
                     ),
                   ),
                   const SizedBox(height: 6),
-                  FittedBox(
-                    fit: BoxFit.scaleDown, // ✅ nagy számoknál összébb megy
-                    alignment: Alignment.centerLeft,
-                    child: Text(
-                      value,
-                      style:
-                          t.titleLarge?.copyWith(fontWeight: FontWeight.w900),
-                    ),
+                  // ✅ FIX: FittedBox helyett stabil Text (kevesebb rounding/overflow)
+                  Text(
+                    value,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: t.titleLarge?.copyWith(fontWeight: FontWeight.w900),
                   ),
                 ],
               ),
@@ -321,7 +321,7 @@ class _AdminOverviewTabState extends State<AdminOverviewTab> {
           ),
           const SizedBox(height: 8),
 
-          // ✅ FIX: Grid cella fix magassággal, nincs több overflow
+          // ✅ FIX: nagyobb cellamagasság (92 -> 110) -> megszűnik a bottom overflow
           GridView.builder(
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
@@ -330,7 +330,7 @@ class _AdminOverviewTabState extends State<AdminOverviewTab> {
               crossAxisCount: 2,
               mainAxisSpacing: 12,
               crossAxisSpacing: 12,
-              mainAxisExtent: 92, // ✅ stabil, overflow-mentes magasság
+              mainAxisExtent: 110,
             ),
             itemBuilder: (context, index) {
               switch (index) {
@@ -761,8 +761,10 @@ class RecordReviewTab extends StatelessWidget {
         final docs = snapshot.data!.docs.toList();
 
         docs.sort((a, b) {
-          final ta = _tsFrom(a.data()['submittedAt'])?.millisecondsSinceEpoch ?? 0;
-          final tb = _tsFrom(b.data()['submittedAt'])?.millisecondsSinceEpoch ?? 0;
+          final ta =
+              _tsFrom(a.data()['submittedAt'])?.millisecondsSinceEpoch ?? 0;
+          final tb =
+              _tsFrom(b.data()['submittedAt'])?.millisecondsSinceEpoch ?? 0;
           return tb.compareTo(ta);
         });
 
@@ -1166,8 +1168,9 @@ class _ReportReviewTabState extends State<ReportReviewTab> {
                                     ? "Eltiltva eddig: ${bannedUntil.toDate().toLocal().toString().split('.')[0]}"
                                     : "Véglegesen kitiltva",
                                 style: TextStyle(
-                                  color:
-                                      bannedUntil != null ? Colors.orange : Colors.red,
+                                  color: bannedUntil != null
+                                      ? Colors.orange
+                                      : Colors.red,
                                   fontWeight: FontWeight.w800,
                                 ),
                               ),
@@ -1216,7 +1219,8 @@ class _ReportReviewTabState extends State<ReportReviewTab> {
                                           ? null
                                           : () => unbanUser(postAuthorId),
                                       icon: const Icon(Icons.undo),
-                                      label: const Text("Tiltás visszavonása"),
+                                      label:
+                                          const Text("Tiltás visszavonása"),
                                     ),
                                 ],
                               ),
