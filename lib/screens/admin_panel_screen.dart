@@ -65,10 +65,10 @@ class _AdminPanelScreenState extends State<AdminPanelScreen>
 
 class _Ui {
   static Widget glassCard(
-      BuildContext context, {
-        required Widget child,
-        EdgeInsets padding = const EdgeInsets.all(14),
-      }) {
+    BuildContext context, {
+    required Widget child,
+    EdgeInsets padding = const EdgeInsets.all(14),
+  }) {
     final scheme = Theme.of(context).colorScheme;
     return Container(
       padding: padding,
@@ -89,11 +89,11 @@ class _Ui {
   }
 
   static Widget sectionHeader(
-      BuildContext context, {
-        required String title,
-        String? subtitle,
-        Widget? trailing,
-      }) {
+    BuildContext context, {
+    required String title,
+    String? subtitle,
+    Widget? trailing,
+  }) {
     final t = Theme.of(context).textTheme;
     final scheme = Theme.of(context).colorScheme;
 
@@ -106,8 +106,10 @@ class _Ui {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(title,
-                    style: t.titleLarge?.copyWith(fontWeight: FontWeight.w900)),
+                Text(
+                  title,
+                  style: t.titleLarge?.copyWith(fontWeight: FontWeight.w900),
+                ),
                 if (subtitle != null) ...[
                   const SizedBox(height: 4),
                   Text(
@@ -128,11 +130,11 @@ class _Ui {
   }
 
   static Widget pill(
-      BuildContext context, {
-        required IconData icon,
-        required String text,
-        required Color color,
-      }) {
+    BuildContext context, {
+    required IconData icon,
+    required String text,
+    required Color color,
+  }) {
     final scheme = Theme.of(context).colorScheme;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
@@ -191,9 +193,9 @@ class _AdminOverviewTabState extends State<AdminOverviewTab> {
     setState(() => loading = true);
     try {
       final usersSnap =
-      await FirebaseFirestore.instance.collection('users').get();
+          await FirebaseFirestore.instance.collection('users').get();
       final postsSnap =
-      await FirebaseFirestore.instance.collection('posts').get();
+          await FirebaseFirestore.instance.collection('posts').get();
 
       QuerySnapshot? reportsSnap;
       QuerySnapshot? pendingRecordsSnap;
@@ -256,7 +258,9 @@ class _AdminOverviewTabState extends State<AdminOverviewTab> {
     }) {
       return _Ui.glassCard(
         context,
+        padding: const EdgeInsets.all(12), // ✅ kisebb padding, több hely
         child: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             Container(
               width: 44,
@@ -270,19 +274,27 @@ class _AdminOverviewTabState extends State<AdminOverviewTab> {
             const SizedBox(width: 12),
             Expanded(
               child: Column(
+                mainAxisSize: MainAxisSize.min, // ✅ ne próbáljon „kitölteni”
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     title,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis, // ✅ ne csússzon szét
                     style: t.bodyMedium?.copyWith(
                       color: scheme.onSurfaceVariant,
                       fontWeight: FontWeight.w700,
                     ),
                   ),
-                  const SizedBox(height: 4),
-                  Text(
-                    value,
-                    style: t.titleLarge?.copyWith(fontWeight: FontWeight.w900),
+                  const SizedBox(height: 6),
+                  FittedBox(
+                    fit: BoxFit.scaleDown, // ✅ nagy számoknál összébb megy
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      value,
+                      style:
+                          t.titleLarge?.copyWith(fontWeight: FontWeight.w900),
+                    ),
                   ),
                 ],
               ),
@@ -309,45 +321,57 @@ class _AdminOverviewTabState extends State<AdminOverviewTab> {
           ),
           const SizedBox(height: 8),
 
-          GridView.count(
-            crossAxisCount: 2,
-            mainAxisSpacing: 12,
-            crossAxisSpacing: 12,
+          // ✅ FIX: Grid cella fix magassággal, nincs több overflow
+          GridView.builder(
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
-            childAspectRatio: 2.2,
-            children: [
-              kpi(
-                icon: Icons.people_outline,
-                title: 'Felhasználók',
-                value: userCount.toString(),
-                tint: scheme.primary,
-              ),
-              kpi(
-                icon: Icons.article_outlined,
-                title: 'Posztok',
-                value: postCount.toString(),
-                tint: Colors.green,
-              ),
-              kpi(
-                icon: Icons.favorite_outline,
-                title: 'Like-ok',
-                value: totalLikes.toString(),
-                tint: Colors.red,
-              ),
-              kpi(
-                icon: Icons.report_outlined,
-                title: 'Nyitott jelentések',
-                value: reportOpenCount.toString(),
-                tint: Colors.orange,
-              ),
-            ],
+            itemCount: 4,
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 2,
+              mainAxisSpacing: 12,
+              crossAxisSpacing: 12,
+              mainAxisExtent: 92, // ✅ stabil, overflow-mentes magasság
+            ),
+            itemBuilder: (context, index) {
+              switch (index) {
+                case 0:
+                  return kpi(
+                    icon: Icons.people_outline,
+                    title: 'Felhasználók',
+                    value: userCount.toString(),
+                    tint: scheme.primary,
+                  );
+                case 1:
+                  return kpi(
+                    icon: Icons.article_outlined,
+                    title: 'Posztok',
+                    value: postCount.toString(),
+                    tint: Colors.green,
+                  );
+                case 2:
+                  return kpi(
+                    icon: Icons.favorite_outline,
+                    title: 'Like-ok',
+                    value: totalLikes.toString(),
+                    tint: Colors.red,
+                  );
+                case 3:
+                default:
+                  return kpi(
+                    icon: Icons.report_outlined,
+                    title: 'Nyitott jelentések',
+                    value: reportOpenCount.toString(),
+                    tint: Colors.orange,
+                  );
+              }
+            },
           ),
 
           const SizedBox(height: 14),
           _Ui.glassCard(
             context,
             child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Icon(Icons.pending_actions_outlined,
                     color: scheme.onSurfaceVariant),
@@ -356,6 +380,7 @@ class _AdminOverviewTabState extends State<AdminOverviewTab> {
                   child: Text(
                     'Függőben lévő rekord jóváhagyások: $recordPendingCount',
                     style: t.bodyMedium?.copyWith(fontWeight: FontWeight.w800),
+                    softWrap: true,
                   ),
                 ),
               ],
@@ -364,9 +389,6 @@ class _AdminOverviewTabState extends State<AdminOverviewTab> {
 
           const SizedBox(height: 18),
           _Ui.sectionHeader(context, title: 'Diagram'),
-
-          // ✅ FIX: RenderFlex overflow megszüntetése (bottomTitles + reservedSize + SideTitleWidget)
-          // ---------------- Diagram ----------------
 
           _Ui.glassCard(
             context,
@@ -394,7 +416,7 @@ class _AdminOverviewTabState extends State<AdminOverviewTab> {
                           if (label.isEmpty) return const SizedBox.shrink();
 
                           return SideTitleWidget(
-                            meta: meta, // ✅ fl_chart 1.1.1-ben kötelező
+                            meta: meta,
                             space: 8,
                             child: Text(
                               label,
@@ -414,7 +436,7 @@ class _AdminOverviewTabState extends State<AdminOverviewTab> {
                         interval: 20,
                         getTitlesWidget: (v, meta) {
                           return SideTitleWidget(
-                            meta: meta, // ✅ fl_chart 1.1.1-ben kötelező
+                            meta: meta,
                             space: 8,
                             child: Text(
                               v.toInt().toString(),
@@ -446,14 +468,15 @@ class _AdminOverviewTabState extends State<AdminOverviewTab> {
                     ),
                     BarChartGroupData(
                       x: 3,
-                      barRods: [BarChartRodData(toY: reportOpenCount.toDouble())],
+                      barRods: [
+                        BarChartRodData(toY: reportOpenCount.toDouble())
+                      ],
                     ),
                   ],
                 ),
               ),
             ),
           ),
-
 
           const SizedBox(height: 22),
           _Ui.sectionHeader(
@@ -530,7 +553,8 @@ class _AdminOverviewTabState extends State<AdminOverviewTab> {
                       children: [
                         CircleAvatar(
                           backgroundColor: scheme.primary.withOpacity(0.15),
-                          child: Icon(Icons.person_outline, color: scheme.primary),
+                          child:
+                              Icon(Icons.person_outline, color: scheme.primary),
                         ),
                         const SizedBox(width: 12),
                         Expanded(
@@ -539,6 +563,8 @@ class _AdminOverviewTabState extends State<AdminOverviewTab> {
                             children: [
                               Text(
                                 name,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
                                 style: Theme.of(context)
                                     .textTheme
                                     .titleMedium
@@ -547,10 +573,13 @@ class _AdminOverviewTabState extends State<AdminOverviewTab> {
                               if (email.isNotEmpty)
                                 Text(
                                   email,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
                                   style: Theme.of(context)
                                       .textTheme
                                       .bodySmall
-                                      ?.copyWith(color: scheme.onSurfaceVariant),
+                                      ?.copyWith(
+                                          color: scheme.onSurfaceVariant),
                                 ),
                             ],
                           ),
@@ -561,7 +590,8 @@ class _AdminOverviewTabState extends State<AdminOverviewTab> {
                           underline: const SizedBox.shrink(),
                           items: const [
                             DropdownMenuItem(value: 'user', child: Text('user')),
-                            DropdownMenuItem(value: 'admin', child: Text('admin')),
+                            DropdownMenuItem(
+                                value: 'admin', child: Text('admin')),
                           ],
                           onChanged: (newRole) async {
                             if (newRole == null) return;
@@ -617,7 +647,7 @@ class RecordReviewTab extends StatelessWidget {
     final userRef = FirebaseFirestore.instance.collection('users').doc(userId);
     final userSnap = await userRef.get();
     final achievements =
-    Map<String, dynamic>.from(userSnap.data()?['achievements'] ?? {});
+        Map<String, dynamic>.from(userSnap.data()?['achievements'] ?? {});
 
     final thresholds = {
       'catch5kg': 5.0,
@@ -713,7 +743,7 @@ class RecordReviewTab extends StatelessWidget {
               context,
               child: Text(
                 'Hiba a rekordok betöltésekor:\n${snapshot.error}\n\n'
-                    'Tipp: ellenőrizd, hogy a record_reviews dokumentumokban létezik-e a "status" mező, és hogy van-e jogosultság olvasásra.',
+                'Tipp: ellenőrizd, hogy a record_reviews dokumentumokban létezik-e a "status" mező, és hogy van-e jogosultság olvasásra.',
                 style: Theme.of(context).textTheme.bodyMedium,
               ),
             ),
@@ -731,10 +761,8 @@ class RecordReviewTab extends StatelessWidget {
         final docs = snapshot.data!.docs.toList();
 
         docs.sort((a, b) {
-          final ta =
-              _tsFrom(a.data()['submittedAt'])?.millisecondsSinceEpoch ?? 0;
-          final tb =
-              _tsFrom(b.data()['submittedAt'])?.millisecondsSinceEpoch ?? 0;
+          final ta = _tsFrom(a.data()['submittedAt'])?.millisecondsSinceEpoch ?? 0;
+          final tb = _tsFrom(b.data()['submittedAt'])?.millisecondsSinceEpoch ?? 0;
           return tb.compareTo(ta);
         });
 
@@ -775,6 +803,8 @@ class RecordReviewTab extends StatelessWidget {
                           Expanded(
                             child: Text(
                               '$fish • $weight kg',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
                               style: Theme.of(context)
                                   .textTheme
                                   .titleMedium
@@ -792,6 +822,8 @@ class RecordReviewTab extends StatelessWidget {
                       const SizedBox(height: 8),
                       Text(
                         '$name${email.isNotEmpty ? ' • $email' : ''}',
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
                         style: Theme.of(context)
                             .textTheme
                             .bodySmall
@@ -862,7 +894,7 @@ class _ReportReviewTabState extends State<ReportReviewTab> {
     if (_userCache.containsKey(userId)) return _userCache[userId];
 
     final userDoc =
-    await FirebaseFirestore.instance.collection('users').doc(userId).get();
+        await FirebaseFirestore.instance.collection('users').doc(userId).get();
     final data = userDoc.exists ? userDoc.data() : null;
     _userCache[userId] = data;
     return data;
@@ -873,7 +905,7 @@ class _ReportReviewTabState extends State<ReportReviewTab> {
     if (user == null) return;
 
     final userDoc =
-    await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
+        await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
     final userData = userDoc.data();
 
     await FirebaseFirestore.instance.collection('reports').doc(reportId).update({
@@ -907,9 +939,9 @@ class _ReportReviewTabState extends State<ReportReviewTab> {
     final data = permanent
         ? {'banned': true}
         : {
-      'bannedUntil':
-      Timestamp.fromDate(DateTime.now().add(const Duration(days: 7))),
-    };
+            'bannedUntil':
+                Timestamp.fromDate(DateTime.now().add(const Duration(days: 7))),
+          };
 
     await FirebaseFirestore.instance.collection('users').doc(userId).update(data);
 
@@ -990,12 +1022,12 @@ class _ReportReviewTabState extends State<ReportReviewTab> {
             final postId = (data['postId'] ?? '').toString();
             final status = (data['status'] ?? 'open').toString();
             final reason =
-            (data['reason'] ?? data['urgency_reason'] ?? 'N/A').toString();
+                (data['reason'] ?? data['urgency_reason'] ?? 'N/A').toString();
             final extra = (data['extra'] ?? '').toString();
             final type = (data['type'] ?? data['urgency'] ?? 'N/A').toString();
 
             final reporterId =
-            (data['reporterId'] ?? data['userId'] ?? '').toString();
+                (data['reporterId'] ?? data['userId'] ?? '').toString();
             final postAuthorId = (data['postAuthorId'] ?? '').toString();
 
             final ts = data['timestamp'];
@@ -1008,17 +1040,18 @@ class _ReportReviewTabState extends State<ReportReviewTab> {
               builder: (context, reporterSnap) {
                 final reporterData = reporterSnap.data;
                 final reporterName =
-                (reporterData?['name'] ?? 'Ismeretlen').toString();
+                    (reporterData?['name'] ?? 'Ismeretlen').toString();
                 final reporterEmail =
-                (reporterData?['email'] ?? '').toString();
+                    (reporterData?['email'] ?? '').toString();
 
                 return FutureBuilder<Map<String, dynamic>?>(
                   future: _getUser(postAuthorId.isNotEmpty ? postAuthorId : null),
                   builder: (context, authorSnap) {
                     final authorData = authorSnap.data;
                     final authorName =
-                    (authorData?['name'] ?? 'Ismeretlen').toString();
-                    final authorEmail = (authorData?['email'] ?? '').toString();
+                        (authorData?['name'] ?? 'Ismeretlen').toString();
+                    final authorEmail =
+                        (authorData?['email'] ?? '').toString();
                     final isBanned = authorData?['banned'] == true;
                     final bannedUntil = authorData?['bannedUntil'] as Timestamp?;
 
@@ -1044,6 +1077,8 @@ class _ReportReviewTabState extends State<ReportReviewTab> {
                                 Expanded(
                                   child: Text(
                                     'Jelentés • Poszt: ${postId.isEmpty ? '-' : postId}',
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
                                     style: Theme.of(context)
                                         .textTheme
                                         .titleMedium
@@ -1076,6 +1111,8 @@ class _ReportReviewTabState extends State<ReportReviewTab> {
                             const SizedBox(height: 10),
                             Text(
                               'Jelentette: $reporterName${reporterEmail.isNotEmpty ? ' • $reporterEmail' : ''}',
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
                               style: Theme.of(context)
                                   .textTheme
                                   .bodySmall
@@ -1085,6 +1122,8 @@ class _ReportReviewTabState extends State<ReportReviewTab> {
                               const SizedBox(height: 4),
                               Text(
                                 'Posztoló: $authorName${authorEmail.isNotEmpty ? ' • $authorEmail' : ''}',
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
                                 style: Theme.of(context)
                                     .textTheme
                                     .bodySmall
@@ -1097,21 +1136,26 @@ class _ReportReviewTabState extends State<ReportReviewTab> {
                                 Icon(Icons.label_outline,
                                     size: 16, color: scheme.onSurfaceVariant),
                                 const SizedBox(width: 6),
-                                Text(
-                                  'Típus: $type',
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .bodySmall
-                                      ?.copyWith(color: scheme.onSurfaceVariant),
+                                Expanded(
+                                  child: Text(
+                                    'Típus: $type',
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .bodySmall
+                                        ?.copyWith(
+                                            color: scheme.onSurfaceVariant),
+                                  ),
                                 ),
-                                const Spacer(),
                                 if (timeStr.isNotEmpty)
                                   Text(
                                     timeStr,
                                     style: Theme.of(context)
                                         .textTheme
                                         .bodySmall
-                                        ?.copyWith(color: scheme.onSurfaceVariant),
+                                        ?.copyWith(
+                                            color: scheme.onSurfaceVariant),
                                   ),
                               ],
                             ),
@@ -1122,9 +1166,8 @@ class _ReportReviewTabState extends State<ReportReviewTab> {
                                     ? "Eltiltva eddig: ${bannedUntil.toDate().toLocal().toString().split('.')[0]}"
                                     : "Véglegesen kitiltva",
                                 style: TextStyle(
-                                  color: bannedUntil != null
-                                      ? Colors.orange
-                                      : Colors.red,
+                                  color:
+                                      bannedUntil != null ? Colors.orange : Colors.red,
                                   fontWeight: FontWeight.w800,
                                 ),
                               ),
@@ -1137,7 +1180,8 @@ class _ReportReviewTabState extends State<ReportReviewTab> {
                                   style: Theme.of(context)
                                       .textTheme
                                       .bodySmall
-                                      ?.copyWith(color: scheme.onSurfaceVariant),
+                                      ?.copyWith(
+                                          color: scheme.onSurfaceVariant),
                                 ),
                               ],
                             ] else ...[
@@ -1154,7 +1198,7 @@ class _ReportReviewTabState extends State<ReportReviewTab> {
                                     onPressed: postAuthorId.isEmpty
                                         ? null
                                         : () => banUser(postAuthorId,
-                                        permanent: false),
+                                            permanent: false),
                                     icon: const Icon(Icons.timer_off),
                                     label: const Text("7 nap tiltás"),
                                   ),
@@ -1162,7 +1206,7 @@ class _ReportReviewTabState extends State<ReportReviewTab> {
                                     onPressed: postAuthorId.isEmpty
                                         ? null
                                         : () => banUser(postAuthorId,
-                                        permanent: true),
+                                            permanent: true),
                                     icon: const Icon(Icons.block),
                                     label: const Text("Végleges ban"),
                                   ),
@@ -1172,8 +1216,7 @@ class _ReportReviewTabState extends State<ReportReviewTab> {
                                           ? null
                                           : () => unbanUser(postAuthorId),
                                       icon: const Icon(Icons.undo),
-                                      label:
-                                      const Text("Tiltás visszavonása"),
+                                      label: const Text("Tiltás visszavonása"),
                                     ),
                                 ],
                               ),
