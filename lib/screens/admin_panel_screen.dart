@@ -245,6 +245,7 @@ class _AdminOverviewTabState extends State<AdminOverviewTab> {
 
   @override
   Widget build(BuildContext context) {
+    debugPrint("ADMIN PANEL BUILD - NEW CODE RUNNING");
     final scheme = Theme.of(context).colorScheme;
     final t = Theme.of(context).textTheme;
 
@@ -1304,3 +1305,4 @@ class PostDetailScreen extends StatelessWidget {
     );
   }
 }
+
