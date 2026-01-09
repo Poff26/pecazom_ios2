@@ -1,17 +1,20 @@
 // lib/screens/weather_screen.dart
 //
-// Egyetlen fájlba rendezve (FRISSÍTVE):
-// - WeatherService (WeatherAPI.com) + település kereső javaslatok (search.json)
-// - Modellek (WeatherResponse + almodellek, toJson)
-// - getCurrentLocation()
-// - WeatherViewModel (60 perces SharedPreferences cache) – GPS és település szerint kulcsolva
-// - Premium WeatherScreen: kereső felugró opciókkal (autocomplete dropdown)
-// - Heatmap / Meteo map: IDEIGLENESEN KIVÉVE A MEGJELENÍTÉSBŐL
+// FRISSÍTVE (Google Places Autocomplete + UI bugfix):
+// - Település kereső immár Google Places Autocomplete (sokkal pontosabb)
+//   * Autocomplete -> Place Details -> lat/lon -> WeatherAPI forecast
+// - A javaslatlista NEM csúszik rá a tartalomra (helyet foglal, nem takar)
+// - Heatmap / Meteo map: IDEIGLENESEN KIVÉVE
 //
-// Fontos: add a pubspec.yaml-hoz:
+// Fontos: pubspec.yaml
 //   geolocator, http, provider, fl_chart, shared_preferences
 //
-// Megjegyzés: A WeatherAPI kulcsot változatlanul hagytam.
+// Fontos: Android/iOS Google Places kulcs
+// - Itt kódban is használjuk HTTP-hez (Places API). Tedd be a saját kulcsod:
+//   WeatherService._googlePlacesKey
+// - A kulcsnak engedélyezd: Places API (és célszerűen HTTP referrerek / package+SHA1 korlátozás)
+//
+// Megjegyzés: WeatherAPI kulcsod változatlan.
 
 import 'dart:async';
 import 'dart:convert';
@@ -326,54 +329,48 @@ class ForecastDay {
 }
 
 /// ─────────────────────────────────────────────────────────────────────────────
-/// City suggestions (WeatherAPI search.json)
+/// Google Places models
 /// ─────────────────────────────────────────────────────────────────────────────
-class CitySuggestion {
-  final String name;
-  final String region;
-  final String country;
-  final double lat;
-  final double lon;
 
-  CitySuggestion({
-    required this.name,
-    required this.region,
-    required this.country,
-    required this.lat,
-    required this.lon,
+class _PlacePrediction {
+  final String description;
+  final String placeId;
+
+  const _PlacePrediction({
+    required this.description,
+    required this.placeId,
   });
 
-  factory CitySuggestion.fromJson(Map<String, dynamic> json) => CitySuggestion(
-        name: (json['name'] ?? '') as String,
-        region: (json['region'] ?? '') as String,
-        country: (json['country'] ?? '') as String,
-        lat: (json['lat'] as num).toDouble(),
-        lon: (json['lon'] as num).toDouble(),
+  factory _PlacePrediction.fromJson(Map<String, dynamic> json) => _PlacePrediction(
+        description: (json['description'] ?? '') as String,
+        placeId: (json['place_id'] ?? '') as String,
       );
+}
 
-  String get displayLine {
-    final parts = <String>[name];
-    if (region.trim().isNotEmpty) parts.add(region);
-    if (country.trim().isNotEmpty) parts.add(country);
-    return parts.join(', ');
-  }
+class _PlaceLatLng {
+  final double lat;
+  final double lng;
+
+  const _PlaceLatLng(this.lat, this.lng);
 }
 
 /// ─────────────────────────────────────────────────────────────────────────────
-/// Service: WeatherService
+/// Service: WeatherService (WeatherAPI + Google Places)
 /// ─────────────────────────────────────────────────────────────────────────────
 class WeatherService {
-  static const String _apiKey = '683c54e2bff5444aaa6203219252703';
-  static const String _baseUrl = 'https://api.weatherapi.com/v1/forecast.json';
-  static const String _searchUrl = 'https://api.weatherapi.com/v1/search.json';
+  static const String _weatherApiKey = '683c54e2bff5444aaa6203219252703';
+  static const String _weatherBaseUrl = 'https://api.weatherapi.com/v1/forecast.json';
+
+  // TODO: Tedd be a saját Google Places API kulcsod!
+  static const String _googlePlacesKey = 'PASTE_YOUR_GOOGLE_PLACES_API_KEY_HERE';
 
   Future<WeatherResponse> fetchCurrentWeather({
     required double lat,
     required double lon,
   }) async {
-    final uri = Uri.parse('$_baseUrl?key=$_apiKey&q=$lat,$lon&days=3&aqi=no&alerts=no');
-
+    final uri = Uri.parse('$_weatherBaseUrl?key=$_weatherApiKey&q=$lat,$lon&days=3&aqi=no&alerts=no');
     final response = await http.get(uri);
+
     if (response.statusCode != 200) {
       throw Exception('Failed to load weather data (${response.statusCode})');
     }
@@ -382,35 +379,81 @@ class WeatherService {
     return WeatherResponse.fromJson(jsonMap);
   }
 
-  Future<WeatherResponse> fetchWeatherByQuery({required String query}) async {
-    final q = Uri.encodeComponent(query.trim());
-    final uri = Uri.parse('$_baseUrl?key=$_apiKey&q=$q&days=3&aqi=no&alerts=no');
+  /// Google Places Autocomplete – település / helységnév
+  Future<List<_PlacePrediction>> googleAutocomplete({
+    required String input,
+    String language = 'hu',
+  }) async {
+    final q = Uri.encodeComponent(input.trim());
 
-    final response = await http.get(uri);
-    if (response.statusCode != 200) {
-      throw Exception('Nem található település / hiba (${response.statusCode})');
+    // type=(cities) sokkal kevesebb "farm airport" jellegű találatot ad.
+    // components=country:hu opcionális (ha csak HU kell)
+    final uri = Uri.parse(
+      'https://maps.googleapis.com/maps/api/place/autocomplete/json'
+      '?key=$_googlePlacesKey'
+      '&input=$q'
+      '&language=$language'
+      '&types=(cities)',
+    );
+
+    final res = await http.get(uri);
+    if (res.statusCode != 200) {
+      throw Exception('Google autocomplete hiba (${res.statusCode})');
     }
 
-    final Map<String, dynamic> jsonMap = jsonDecode(response.body);
-    return WeatherResponse.fromJson(jsonMap);
+    final Map<String, dynamic> body = jsonDecode(res.body) as Map<String, dynamic>;
+    final status = (body['status'] ?? '') as String;
+
+    if (status != 'OK' && status != 'ZERO_RESULTS') {
+      final msg = (body['error_message'] ?? status).toString();
+      throw Exception('Google Places: $msg');
+    }
+
+    final List<dynamic> preds = (body['predictions'] as List<dynamic>? ?? const []);
+    return preds.map((e) => _PlacePrediction.fromJson(e as Map<String, dynamic>)).toList();
+    // ZERO_RESULTS -> üres lista (oké)
   }
 
-  Future<List<CitySuggestion>> searchCities(String query) async {
-    final q = Uri.encodeComponent(query.trim());
-    final uri = Uri.parse('$_searchUrl?key=$_apiKey&q=$q');
+  /// Google Place Details – lat/lon
+  Future<_PlaceLatLng> googlePlaceDetails({
+    required String placeId,
+    String language = 'hu',
+  }) async {
+    final pid = Uri.encodeComponent(placeId);
 
-    final response = await http.get(uri);
-    if (response.statusCode != 200) {
-      throw Exception('City search failed (${response.statusCode})');
+    // csak a geometry kell (gyorsabb/olcsóbb)
+    final uri = Uri.parse(
+      'https://maps.googleapis.com/maps/api/place/details/json'
+      '?key=$_googlePlacesKey'
+      '&place_id=$pid'
+      '&language=$language'
+      '&fields=geometry',
+    );
+
+    final res = await http.get(uri);
+    if (res.statusCode != 200) {
+      throw Exception('Google place details hiba (${res.statusCode})');
     }
 
-    final List<dynamic> raw = jsonDecode(response.body) as List<dynamic>;
-    return raw.map((e) => CitySuggestion.fromJson(e as Map<String, dynamic>)).toList();
+    final Map<String, dynamic> body = jsonDecode(res.body) as Map<String, dynamic>;
+    final status = (body['status'] ?? '') as String;
+
+    if (status != 'OK') {
+      final msg = (body['error_message'] ?? status).toString();
+      throw Exception('Google Details: $msg');
+    }
+
+    final result = (body['result'] as Map<String, dynamic>? ?? const {});
+    final geom = (result['geometry'] as Map<String, dynamic>? ?? const {});
+    final loc = (geom['location'] as Map<String, dynamic>? ?? const {});
+    final lat = (loc['lat'] as num).toDouble();
+    final lng = (loc['lng'] as num).toDouble();
+    return _PlaceLatLng(lat, lng);
   }
 }
 
 /// ─────────────────────────────────────────────────────────────────────────────
-/// ViewModel: 60 perces cache (SharedPreferences) – GPS / település kulccsal
+/// ViewModel: 60 perces cache (SharedPreferences) – koordináta kulccsal
 /// ─────────────────────────────────────────────────────────────────────────────
 class WeatherViewModel extends ChangeNotifier {
   final WeatherService _weatherService;
@@ -431,26 +474,23 @@ class WeatherViewModel extends ChangeNotifier {
     double lon, {
     bool force = false,
   }) async {
-    final key = 'gps:${lat.toStringAsFixed(3)},${lon.toStringAsFixed(3)}';
     activeQueryLabel = 'Helyalapú';
+    await loadWeatherByCoordsLabel(lat: lat, lon: lon, label: 'Helyalapú', force: force);
+  }
+
+  Future<void> loadWeatherByCoordsLabel({
+    required double lat,
+    required double lon,
+    required String label,
+    bool force = false,
+  }) async {
+    final key = 'gps:${lat.toStringAsFixed(3)},${lon.toStringAsFixed(3)}';
+    activeQueryLabel = label;
+
     await _loadInternal(
       force: force,
       cacheKey: key,
       fetcher: () => _weatherService.fetchCurrentWeather(lat: lat, lon: lon),
-    );
-  }
-
-  Future<void> loadWeatherByCity(
-    String city, {
-    bool force = false,
-  }) async {
-    final normalized = city.trim();
-    final key = 'q:${normalized.toLowerCase()}';
-    activeQueryLabel = normalized;
-    await _loadInternal(
-      force: force,
-      cacheKey: key,
-      fetcher: () => _weatherService.fetchWeatherByQuery(query: normalized),
     );
   }
 
@@ -522,7 +562,7 @@ class _FishingWindow {
 }
 
 /// ─────────────────────────────────────────────────────────────────────────────
-/// WeatherScreen (Premium) – kereső felugró opciókkal, heatmap UI nélkül
+/// WeatherScreen – Google Places kereső + stabil dropdown (nem takar)
 /// ─────────────────────────────────────────────────────────────────────────────
 class WeatherScreen extends StatefulWidget {
   const WeatherScreen({super.key});
@@ -557,23 +597,25 @@ class _WeatherScreenState extends State<WeatherScreen> with TickerProviderStateM
     duration: const Duration(milliseconds: 1600),
   )..repeat(reverse: true);
 
-  // Search state
+  // Search state (Google)
   final TextEditingController _cityCtrl = TextEditingController();
   final FocusNode _cityFocus = FocusNode();
 
   Timer? _cityDebounce;
-  List<CitySuggestion> _citySuggestions = [];
+  List<_PlacePrediction> _predictions = [];
   bool _suggestLoading = false;
   int _suggestReqId = 0;
 
-  String? _lastCityQuery;
+  // az utolsó kiválasztott/keresett címkét eltesszük a refresh gombhoz
+  String? _lastLabel;
 
   @override
   void initState() {
     super.initState();
+
     _cityFocus.addListener(() {
       if (!mounted) return;
-      setState(() {}); // hogy a dropdown azonnal megjelenjen / eltűnjön
+      setState(() {}); // dropdown frissítés
     });
 
     _loadLocationAndWeather();
@@ -611,6 +653,7 @@ class _WeatherScreenState extends State<WeatherScreen> with TickerProviderStateM
     if (!mounted) return;
 
     if (pos != null) {
+      _lastLabel = null;
       await viewModel.loadWeatherByGps(pos.latitude, pos.longitude, force: false);
     } else {
       viewModel
@@ -627,71 +670,81 @@ class _WeatherScreenState extends State<WeatherScreen> with TickerProviderStateM
 
     if (q.length < 2) {
       setState(() {
-        _citySuggestions = [];
+        _predictions = [];
         _suggestLoading = false;
       });
       return;
     }
 
-    _cityDebounce = Timer(const Duration(milliseconds: 350), () async {
+    _cityDebounce = Timer(const Duration(milliseconds: 280), () async {
       final int reqId = ++_suggestReqId;
 
-      if (mounted) {
-        setState(() => _suggestLoading = true);
-      }
+      if (mounted) setState(() => _suggestLoading = true);
 
       try {
-        final res = await _svc.searchCities(q);
+        final res = await _svc.googleAutocomplete(input: q, language: 'hu');
         if (!mounted || reqId != _suggestReqId) return;
 
+        // kis szűrés: üres/bugos elemek kidobása
+        final cleaned = res.where((p) => p.description.trim().isNotEmpty && p.placeId.trim().isNotEmpty).toList();
+
         setState(() {
-          _citySuggestions = res.take(8).toList();
+          _predictions = cleaned.take(8).toList();
           _suggestLoading = false;
         });
       } catch (_) {
         if (!mounted || reqId != _suggestReqId) return;
         setState(() {
-          _citySuggestions = [];
+          _predictions = [];
           _suggestLoading = false;
         });
       }
     });
   }
 
-  Future<void> _selectSuggestion(CitySuggestion s) async {
-    _cityCtrl.text = s.name;
-    _lastCityQuery = s.name;
+  Future<void> _selectPrediction(_PlacePrediction p) async {
+    _cityCtrl.text = p.description;
+    _lastLabel = p.description;
 
     if (mounted) {
-      setState(() => _citySuggestions = []);
+      setState(() => _predictions = []);
       FocusScope.of(context).unfocus();
     }
 
-    await viewModel.loadWeatherByCity(s.name, force: true);
+    final ll = await _svc.googlePlaceDetails(placeId: p.placeId, language: 'hu');
+    await viewModel.loadWeatherByCoordsLabel(
+      lat: ll.lat,
+      lon: ll.lng,
+      label: p.description,
+      force: true,
+    );
   }
 
-  Future<void> _submitCity(String raw) async {
+  Future<void> _submitTextAsSearch(String raw) async {
     final q = raw.trim();
     if (q.isEmpty) return;
 
-    _lastCityQuery = q;
-    if (mounted) {
-      setState(() => _citySuggestions = []);
-      FocusScope.of(context).unfocus();
+    // Ha nincs kiválasztás, megpróbáljuk az első találatot auto-kiválasztani (UX)
+    try {
+      final res = await _svc.googleAutocomplete(input: q, language: 'hu');
+      if (res.isNotEmpty) {
+        await _selectPrediction(res.first);
+        return;
+      }
+      // ha nincs találat: maradunk, nem hívunk WeatherAPI-t "random string"-gel
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Nincs találat. Írj pontosabb településnevet.')),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Keresési hiba: $e')),
+      );
     }
-    await viewModel.loadWeatherByCity(q, force: true);
   }
 
-  // ----------------- Safe accessor -----------------
-  double _hourTempC(HourData h) => h.tempC;
-  double _hourPressureMb(HourData h) => h.pressureMb;
-  double _hourWindKph(HourData h) => h.windKph;
-  String _hourWindDir(HourData h) => h.windDir;
-  int _hourHumidity(HourData h) => h.humidity;
-  int _hourChanceOfRain(HourData h) => h.chanceOfRain;
-  String _hourTime(HourData h) => h.time;
-
-  // ----------------- Formatting helpers -----------------
+  // ----------------- Helpers -----------------
   String _displayCity(String raw) {
     const overrides = {'Jaszbereny': 'Jászberény'};
     return overrides[raw] ?? raw;
@@ -749,7 +802,7 @@ class _WeatherScreenState extends State<WeatherScreen> with TickerProviderStateM
     return DateTime.tryParse(s) ?? DateTime.now();
   }
 
-  // ----------------- Kapási ablak: scoring -----------------
+  // ----------------- Kapási ablak scoring -----------------
   double _clamp01(double x) => x < 0 ? 0 : (x > 1 ? 1 : x);
 
   List<_FishingWindow> _computeBestFishingWindows(List<HourData> hours) {
@@ -761,15 +814,15 @@ class _WeatherScreenState extends State<WeatherScreen> with TickerProviderStateM
       final h0 = hours[i];
       final h1 = hours[i + 1];
 
-      final temp = (_hourTempC(h0) + _hourTempC(h1)) / 2.0;
+      final temp = (h0.tempC + h1.tempC) / 2.0;
 
-      final p0 = _hourPressureMb(h0);
-      final p1 = _hourPressureMb(h1);
+      final p0 = h0.pressureMb;
+      final p1 = h1.pressureMb;
       final pDeltaAbs = (p1 - p0).abs();
 
-      final wind = (_hourWindKph(h0) + _hourWindKph(h1)) / 2.0;
-      final rain = (_hourChanceOfRain(h0) + _hourChanceOfRain(h1)) / 2.0;
-      final hum = (_hourHumidity(h0) + _hourHumidity(h1)) / 2.0;
+      final wind = (h0.windKph + h1.windKph) / 2.0;
+      final rain = (h0.chanceOfRain + h1.chanceOfRain) / 2.0;
+      final hum = (h0.humidity + h1.humidity) / 2.0;
 
       final pressureStability = _clamp01(1.0 - (pDeltaAbs / 3.0));
 
@@ -804,11 +857,7 @@ class _WeatherScreenState extends State<WeatherScreen> with TickerProviderStateM
         humScore = 0.90;
       }
 
-      final score01 = (0.34 * pressureStability) +
-          (0.22 * windScore) +
-          (0.22 * rainScore) +
-          (0.16 * tempScore) +
-          (0.06 * humScore);
+      final score01 = (0.34 * pressureStability) + (0.22 * windScore) + (0.22 * rainScore) + (0.16 * tempScore) + (0.06 * humScore);
       final score = (score01 * 100).round().clamp(0, 100);
 
       final reasons = <String>[];
@@ -821,8 +870,8 @@ class _WeatherScreenState extends State<WeatherScreen> with TickerProviderStateM
       if (temp >= 12 && temp <= 24) reasons.add('Kedvező hőmérséklet');
       if (hum >= 90) reasons.add('Magas páratartalom');
 
-      final startT = _parseHourDateTime(_hourTime(h0));
-      final endT = _parseHourDateTime(_hourTime(h1));
+      final startT = _parseHourDateTime(h0.time);
+      final endT = _parseHourDateTime(h1.time);
 
       candidates.add(
         _FishingWindow(
@@ -883,7 +932,6 @@ class _WeatherScreenState extends State<WeatherScreen> with TickerProviderStateM
   static const double _glassBorderOpacity = 0.22;
   static const double _glassShadowOpacity = 0.10;
 
-  // ----------------- Background (parallax gradient) -----------------
   Widget _parallaxBackground(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
 
@@ -943,7 +991,6 @@ class _WeatherScreenState extends State<WeatherScreen> with TickerProviderStateM
     );
   }
 
-  // ----------------- Glass surface -----------------
   Widget _glassSurface(
     BuildContext context, {
     required Widget child,
@@ -1102,6 +1149,8 @@ class _WeatherScreenState extends State<WeatherScreen> with TickerProviderStateM
         ? w.current.lastUpdated
         : '${last.hour.toString().padLeft(2, '0')}:${last.minute.toString().padLeft(2, '0')}';
 
+    final titleCity = _lastLabel != null && _lastLabel!.trim().isNotEmpty ? _lastLabel! : _displayCity(w.location.name);
+
     return ClipRRect(
       borderRadius: BorderRadius.circular(28),
       child: Container(
@@ -1143,8 +1192,10 @@ class _WeatherScreenState extends State<WeatherScreen> with TickerProviderStateM
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    _displayCity(w.location.name),
+                    titleCity,
                     style: t.titleLarge?.copyWith(fontWeight: FontWeight.w900),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
                   const SizedBox(height: 6),
                   Wrap(
@@ -1161,15 +1212,11 @@ class _WeatherScreenState extends State<WeatherScreen> with TickerProviderStateM
             IconButton(
               tooltip: 'Frissítés (force)',
               onPressed: () async {
-                if ((_lastCityQuery ?? '').trim().isNotEmpty) {
-                  await viewModel.loadWeatherByCity(_lastCityQuery!, force: true);
-                  return;
-                }
-
-                final pos = await getCurrentLocation();
-                if (pos != null) {
-                  await viewModel.loadWeatherByGps(pos.latitude, pos.longitude, force: true);
-                }
+                // ha van lastLabel: csak újratöltjük ugyanazt (cache force) az aktuális WeatherResponse koordinátákkal
+                final lat = w.location.lat;
+                final lon = w.location.lon;
+                final label = _lastLabel ?? 'Helyalapú';
+                await viewModel.loadWeatherByCoordsLabel(lat: lat, lon: lon, label: label, force: true);
               },
               icon: const Icon(Icons.refresh),
             ),
@@ -1179,12 +1226,15 @@ class _WeatherScreenState extends State<WeatherScreen> with TickerProviderStateM
     );
   }
 
-  /// Kereső + felugró javaslatok (dropdown)
+  /// Kereső + dropdown: helyet foglal, nem takar.
   Widget _citySearchBar(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
 
-    return Stack(
-      clipBehavior: Clip.none,
+    final showDrop = _cityFocus.hasFocus && _predictions.isNotEmpty;
+    // ~52px / sor + padding; max 260
+    final dropHeight = showDrop ? min(260.0, 8 + (_predictions.length * 52.0) + (_predictions.length - 1) * 1.0) : 0.0;
+
+    return Column(
       children: [
         _glassSurface(
           context,
@@ -1200,13 +1250,13 @@ class _WeatherScreenState extends State<WeatherScreen> with TickerProviderStateM
                   focusNode: _cityFocus,
                   textInputAction: TextInputAction.search,
                   decoration: InputDecoration(
-                    hintText: 'Keress településre (pl. Jászberény)',
+                    hintText: 'Keress településre (Google)',
                     border: InputBorder.none,
                     isDense: true,
                     hintStyle: TextStyle(color: scheme.onSurfaceVariant.withOpacity(0.9)),
                   ),
                   onChanged: _onCityChanged,
-                  onSubmitted: _submitCity,
+                  onSubmitted: _submitTextAsSearch,
                 ),
               ),
               if (_suggestLoading) ...[
@@ -1220,14 +1270,16 @@ class _WeatherScreenState extends State<WeatherScreen> with TickerProviderStateM
               ],
               IconButton(
                 tooltip: 'Keresés',
-                onPressed: () => _submitCity(_cityCtrl.text),
+                onPressed: () => _submitTextAsSearch(_cityCtrl.text),
                 icon: const Icon(Icons.arrow_forward),
               ),
               IconButton(
                 tooltip: 'Vissza helyalapúra',
                 onPressed: () async {
-                  _lastCityQuery = null;
-                  if (mounted) setState(() => _citySuggestions = []);
+                  _lastLabel = null;
+                  _cityCtrl.clear();
+                  if (mounted) setState(() => _predictions = []);
+                  FocusScope.of(context).unfocus();
                   final pos = await getCurrentLocation();
                   if (pos != null) {
                     await viewModel.loadWeatherByGps(pos.latitude, pos.longitude, force: true);
@@ -1238,71 +1290,51 @@ class _WeatherScreenState extends State<WeatherScreen> with TickerProviderStateM
             ],
           ),
         ),
-
-        if (_cityFocus.hasFocus && _citySuggestions.isNotEmpty)
-          Positioned(
-            left: 0,
-            right: 0,
-            top: 64,
-            child: Material(
-              color: Colors.transparent,
-              child: _glassSurface(
-                context,
-                radius: BorderRadius.circular(18),
-                padding: const EdgeInsets.all(8),
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxHeight: 260),
-                  child: ListView.separated(
-                    shrinkWrap: true,
-                    padding: EdgeInsets.zero,
-                    itemCount: _citySuggestions.length,
-                    separatorBuilder: (_, __) => Divider(height: 1, color: scheme.outlineVariant.withOpacity(0.35)),
-                    itemBuilder: (_, i) {
-                      final s = _citySuggestions[i];
-                      return InkWell(
-                        borderRadius: BorderRadius.circular(12),
-                        onTap: () => _selectSuggestion(s),
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
-                          child: Row(
-                            children: [
-                              Icon(Icons.place_outlined, size: 18, color: scheme.onSurfaceVariant),
-                              const SizedBox(width: 10),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      s.name,
-                                      style: const TextStyle(fontWeight: FontWeight.w900),
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                    const SizedBox(height: 2),
-                                    Text(
-                                      '${s.region}${s.region.isNotEmpty ? ', ' : ''}${s.country}',
-                                      style: TextStyle(color: scheme.onSurfaceVariant, fontWeight: FontWeight.w700),
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
+        if (showDrop) ...[
+          const SizedBox(height: 8),
+          _glassSurface(
+            context,
+            radius: BorderRadius.circular(18),
+            padding: const EdgeInsets.all(8),
+            child: ConstrainedBox(
+              constraints: BoxConstraints(maxHeight: dropHeight),
+              child: ListView.separated(
+                shrinkWrap: true,
+                padding: EdgeInsets.zero,
+                itemCount: _predictions.length,
+                separatorBuilder: (_, __) => Divider(height: 1, color: scheme.outlineVariant.withOpacity(0.35)),
+                itemBuilder: (_, i) {
+                  final p = _predictions[i];
+                  return InkWell(
+                    borderRadius: BorderRadius.circular(12),
+                    onTap: () => _selectPrediction(p),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+                      child: Row(
+                        children: [
+                          Icon(Icons.place_outlined, size: 18, color: scheme.onSurfaceVariant),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Text(
+                              p.description,
+                              style: const TextStyle(fontWeight: FontWeight.w900),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
                           ),
-                        ),
-                      );
-                    },
-                  ),
-                ),
+                        ],
+                      ),
+                    ),
+                  );
+                },
               ),
             ),
           ),
+        ],
       ],
     );
   }
 
-  // --- Hero kártya ---
   Widget _heroCurrent(BuildContext context, WeatherResponse w) {
     final scheme = Theme.of(context).colorScheme;
     final t = Theme.of(context).textTheme;
@@ -1382,7 +1414,6 @@ class _WeatherScreenState extends State<WeatherScreen> with TickerProviderStateM
     );
   }
 
-  // ----------------- Loading/empty/error -----------------
   Widget _skeleton(BuildContext context) {
     Widget bar({double? w, double h = 14}) => Container(
           width: w,
@@ -1495,7 +1526,6 @@ class _WeatherScreenState extends State<WeatherScreen> with TickerProviderStateM
     );
   }
 
-  // ----------------- Kapási ablak UI -----------------
   Widget _fishingWindowsSection(BuildContext context, WeatherResponse w) {
     final scheme = Theme.of(context).colorScheme;
     final hours = w.forecast.forecastday.first.hour;
@@ -1711,20 +1741,20 @@ class _WeatherScreenState extends State<WeatherScreen> with TickerProviderStateM
     final h0 = hours[fw.startIndex];
     final h1 = hours[fw.endIndex];
 
-    final p0 = _hourPressureMb(h0);
-    final p1 = _hourPressureMb(h1);
+    final p0 = h0.pressureMb;
+    final p1 = h1.pressureMb;
     final pDelta = p1 - p0;
 
-    final wind0 = _hourWindKph(h0);
-    final wind1 = _hourWindKph(h1);
+    final wind0 = h0.windKph;
+    final wind1 = h1.windKph;
 
-    final rain0 = _hourChanceOfRain(h0);
-    final rain1 = _hourChanceOfRain(h1);
+    final rain0 = h0.chanceOfRain;
+    final rain1 = h1.chanceOfRain;
 
-    final temp0 = _hourTempC(h0);
-    final temp1 = _hourTempC(h1);
+    final temp0 = h0.tempC;
+    final temp1 = h1.tempC;
 
-    final dir = _displayWindDir(_hourWindDir(h0));
+    final dir = _displayWindDir(h0.windDir);
     final accent = _scoreColor(scheme, fw.score0to100);
 
     showModalBottomSheet(
@@ -1782,9 +1812,7 @@ class _WeatherScreenState extends State<WeatherScreen> with TickerProviderStateM
                       Text('Összetevők', style: TextStyle(fontWeight: FontWeight.w900, color: scheme.onSurface)),
                       const SizedBox(height: 10),
                       Text('Hőmérséklet: ${temp0.toStringAsFixed(0)}°C → ${temp1.toStringAsFixed(0)}°C'),
-                      Text(
-                        'Légnyomás: ${p0.toStringAsFixed(0)} mb → ${p1.toStringAsFixed(0)} mb (${pDelta >= 0 ? '+' : ''}${pDelta.toStringAsFixed(1)} mb)',
-                      ),
+                      Text('Légnyomás: ${p0.toStringAsFixed(0)} mb → ${p1.toStringAsFixed(0)} mb (${pDelta >= 0 ? '+' : ''}${pDelta.toStringAsFixed(1)} mb)'),
                       Text('Szél: ${wind0.toStringAsFixed(1)} → ${wind1.toStringAsFixed(1)} km/h ($dir)'),
                       Text('Eső esély: $rain0% → $rain1%'),
                       const SizedBox(height: 10),
@@ -1803,7 +1831,6 @@ class _WeatherScreenState extends State<WeatherScreen> with TickerProviderStateM
     );
   }
 
-  // ----------------- Build -----------------
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
@@ -1816,7 +1843,7 @@ class _WeatherScreenState extends State<WeatherScreen> with TickerProviderStateM
           behavior: HitTestBehavior.translucent,
           onTap: () {
             FocusScope.of(context).unfocus();
-            if (mounted) setState(() => _citySuggestions = []);
+            if (mounted) setState(() => _predictions = []);
           },
           child: Stack(
             children: [
@@ -1855,6 +1882,8 @@ class _WeatherScreenState extends State<WeatherScreen> with TickerProviderStateM
                               children: [
                                 _header(context, w),
                                 const SizedBox(height: 12),
+
+                                // Google kereső + dropdown (nem bugos, nem takar)
                                 _citySearchBar(context),
                                 const SizedBox(height: 12),
 
@@ -1996,7 +2025,7 @@ class _WeatherScreenState extends State<WeatherScreen> with TickerProviderStateM
                                   ),
                                 ),
 
-                                // METEO/HEATMAP: ideiglenesen kivéve
+                                // HEATMAP / METEO MAP: ideiglenesen kivéve
                                 const SizedBox(height: 10),
                               ],
                             ),
