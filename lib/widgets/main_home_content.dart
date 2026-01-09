@@ -23,7 +23,8 @@ class MainHomeContent extends StatefulWidget {
   State<MainHomeContent> createState() => _MainHomeContentState();
 }
 
-class _MainHomeContentState extends State<MainHomeContent> with TickerProviderStateMixin {
+class _MainHomeContentState extends State<MainHomeContent>
+    with TickerProviderStateMixin {
   static const String currentVersion = '2.0.2';
 
   String _displayName = 'Felhasználó';
@@ -60,6 +61,11 @@ class _MainHomeContentState extends State<MainHomeContent> with TickerProviderSt
   static const int _xpPerLevel = 300;
   static const int _dailyClaimXp = 15;
   static const int _xpPerPost = 10;
+
+  // ----------------------------
+  // ✅ FIX: dupla tap / race lock a napi jutalomhoz
+  // ----------------------------
+  bool _claimingDaily = false;
 
   // ----------------------------
   // STRICT forced update state (FULL SCREEN BLOCK)
@@ -117,7 +123,10 @@ class _MainHomeContentState extends State<MainHomeContent> with TickerProviderSt
 
   Future<void> _checkForcedUpdateStrict() async {
     try {
-      final doc = await FirebaseFirestore.instance.collection('config').doc('app_version').get();
+      final doc = await FirebaseFirestore.instance
+          .collection('config')
+          .doc('app_version')
+          .get();
       if (!doc.exists) return;
 
       final data = doc.data();
@@ -205,9 +214,9 @@ class _MainHomeContentState extends State<MainHomeContent> with TickerProviderSt
             content: const SingleChildScrollView(
               child: Text(
                 '• Megújult főoldal és közösségi feed\n'
-                    '• Stabilabb bejelentkezés és értesítések\n'
-                    '• Teljesítmény és UX finomhangolás\n\n'
-                    'Visszajelzés: info@pecazom.hu',
+                '• Stabilabb bejelentkezés és értesítések\n'
+                '• Teljesítmény és UX finomhangolás\n\n'
+                'Visszajelzés: info@pecazom.hu',
               ),
             ),
             actions: [
@@ -302,11 +311,13 @@ class _MainHomeContentState extends State<MainHomeContent> with TickerProviderSt
                 child: FadeTransition(
                   opacity: fade,
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 14, vertical: 10),
                     decoration: BoxDecoration(
                       color: scheme.surface.withOpacity(0.92),
                       borderRadius: BorderRadius.circular(999),
-                      border: Border.all(color: scheme.outlineVariant.withOpacity(0.35)),
+                      border: Border.all(
+                          color: scheme.outlineVariant.withOpacity(0.35)),
                       boxShadow: [
                         BoxShadow(
                           blurRadius: 26,
@@ -322,9 +333,12 @@ class _MainHomeContentState extends State<MainHomeContent> with TickerProviderSt
                         const SizedBox(width: 8),
                         Text(
                           '+$amount XP',
-                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.w900,
-                          ),
+                          style: Theme.of(context)
+                              .textTheme
+                              .titleMedium
+                              ?.copyWith(
+                                fontWeight: FontWeight.w900,
+                              ),
                         ),
                       ],
                     ),
@@ -422,7 +436,8 @@ class _MainHomeContentState extends State<MainHomeContent> with TickerProviderSt
         contents: [
           TargetContent(
             align: ContentAlign.bottom,
-            child: _tutorialText('Ma neked: streak, napi kihívás és jutalom. Nézz rá naponta.'),
+            child: _tutorialText(
+                'Ma neked: streak, napi kihívás és jutalom. Nézz rá naponta.'),
           ),
         ],
       ),
@@ -434,7 +449,8 @@ class _MainHomeContentState extends State<MainHomeContent> with TickerProviderSt
         contents: [
           TargetContent(
             align: ContentAlign.bottom,
-            child: _tutorialText('AI előrejelzés: napi 3 lekérdezés. Ajánlott idő, csali és célhal.'),
+            child: _tutorialText(
+                'AI előrejelzés: napi 3 lekérdezés. Ajánlott idő, csali és célhal.'),
           ),
         ],
       ),
@@ -446,7 +462,8 @@ class _MainHomeContentState extends State<MainHomeContent> with TickerProviderSt
         contents: [
           TargetContent(
             align: ContentAlign.bottom,
-            child: _tutorialText('Statisztikák: a saját eredményeid és aktivitásod áttekintése.'),
+            child: _tutorialText(
+                'Statisztikák: a saját eredményeid és aktivitásod áttekintése.'),
           ),
         ],
       ),
@@ -492,18 +509,18 @@ class _MainHomeContentState extends State<MainHomeContent> with TickerProviderSt
   }
 
   Widget _tutorialText(String text) => Padding(
-    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-    child: Text(
-      text,
-      textAlign: TextAlign.center,
-      style: const TextStyle(
-        color: Colors.white,
-        fontSize: 18,
-        fontWeight: FontWeight.w700,
-        height: 1.25,
-      ),
-    ),
-  );
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        child: Text(
+          text,
+          textAlign: TextAlign.center,
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 18,
+            fontWeight: FontWeight.w700,
+            height: 1.25,
+          ),
+        ),
+      );
 
   // ----------------------------
   // Firestore metrics
@@ -518,8 +535,8 @@ class _MainHomeContentState extends State<MainHomeContent> with TickerProviderSt
         'level': FieldValue.increment(0),
         'streakDays': FieldValue.increment(0),
         'lastOpenDate': today,
-        'claimedDate': FieldValue.delete(), // csak ha nincs, ne erőltesd
-        'postedDate': FieldValue.delete(),
+        // ⚠️ ne töröld mindig: csak merge, ha nincs, marad null/hiányzó
+        // claimedDate -> ne FieldValue.delete() defaultként (felesleges churn)
       },
       SetOptions(merge: true),
     );
@@ -566,67 +583,67 @@ class _MainHomeContentState extends State<MainHomeContent> with TickerProviderSt
     } catch (_) {}
   }
 
-Future<void> _claimDailyReward(String uid) async {
-  if (_claimingDaily) return; // ✅ dupla tap ellen
-  setState(() => _claimingDaily = true);
+  // ✅ FIX: lock + atomikus increment
+  Future<void> _claimDailyReward(String uid) async {
+    if (_claimingDaily) return; // ✅ dupla tap ellen
+    if (!mounted) return;
+    setState(() => _claimingDaily = true);
 
-  try {
-    final today = _todayKey();
-    int gained = 0;
+    try {
+      final today = _todayKey();
+      int gained = 0;
 
-    await FirebaseFirestore.instance.runTransaction((tx) async {
-      final ref = _usersRef.doc(uid);
-      final snap = await tx.get(ref);
-      final data = snap.data() ?? {};
+      await FirebaseFirestore.instance.runTransaction((tx) async {
+        final ref = _usersRef.doc(uid);
+        final snap = await tx.get(ref);
+        final data = snap.data() ?? {};
 
-      final String? claimedDate = data['claimedDate'] as String?;
-      if (claimedDate == today) return;
+        final String? claimedDate = data['claimedDate'] as String?;
+        if (claimedDate == today) return;
 
-      final int streakDays = (data['streakDays'] as num?)?.toInt() ?? 0;
-      final lastClaimed = _parseDay(claimedDate);
-      final cur = _parseDay(today) ?? DateTime.now();
+        final int streakDays = (data['streakDays'] as num?)?.toInt() ?? 0;
+        final lastClaimed = _parseDay(claimedDate);
+        final cur = _parseDay(today) ?? DateTime.now();
 
-      int newStreak;
-      if (lastClaimed == null) {
-        newStreak = 1;
-      } else if (_isYesterday(lastClaimed, cur)) {
-        newStreak = (streakDays <= 0) ? 1 : (streakDays + 1);
-      } else {
-        newStreak = 1;
+        int newStreak;
+        if (lastClaimed == null) {
+          newStreak = 1;
+        } else if (_isYesterday(lastClaimed, cur)) {
+          newStreak = (streakDays <= 0) ? 1 : (streakDays + 1);
+        } else {
+          newStreak = 1;
+        }
+
+        gained = _dailyClaimXp;
+
+        // ✅ ATOMIKUS: increment + claimedDate egyszerre
+        tx.set(
+          ref,
+          {
+            'xp': FieldValue.increment(_dailyClaimXp),
+            'claimedDate': today,
+            'streakDays': newStreak,
+            'lastOpenDate': today,
+          },
+          SetOptions(merge: true),
+        );
+      });
+
+      if (!mounted) return;
+
+      if (gained == 0) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('A mai jutalmat már felvetted.')),
+        );
+        return;
       }
 
-      gained = _dailyClaimXp;
-
-      // ✅ ATOMIKUS: increment + claimedDate egyszerre
-      tx.set(
-        ref,
-        {
-          'xp': FieldValue.increment(_dailyClaimXp),
-          'level': FieldValue.increment(0), // később újraszámoljuk
-          'claimedDate': today,
-          'streakDays': newStreak,
-          'lastOpenDate': today,
-        },
-        SetOptions(merge: true),
-      );
-    });
-
-    if (!mounted) return;
-
-    if (gained == 0) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('A mai jutalmat már felvetted.')),
-      );
-      return;
+      _showXpGain(gained);
+      await _refreshDailyMetrics(uid);
+    } finally {
+      if (mounted) setState(() => _claimingDaily = false);
     }
-
-    _showXpGain(gained);
-    await _refreshDailyMetrics(uid);
-  } finally {
-    if (mounted) setState(() => _claimingDaily = false);
   }
-}
-
 
   Future<void> _markPostedTodayAndReward(String uid) async {
     try {
@@ -678,7 +695,8 @@ Future<void> _claimDailyReward(String uid) async {
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(18),
               color: scheme.surfaceContainerHighest.withOpacity(0.55),
-              border: Border.all(color: scheme.outlineVariant.withOpacity(0.30)),
+              border:
+                  Border.all(color: scheme.outlineVariant.withOpacity(0.30)),
             ),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -689,7 +707,9 @@ Future<void> _claimDailyReward(String uid) async {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(title, style: t.titleMedium?.copyWith(fontWeight: FontWeight.w900)),
+                      Text(title,
+                          style: t.titleMedium
+                              ?.copyWith(fontWeight: FontWeight.w900)),
                       const SizedBox(height: 4),
                       Text(
                         subtitle,
@@ -715,7 +735,10 @@ Future<void> _claimDailyReward(String uid) async {
                 alignment: Alignment.centerLeft,
                 child: Text(
                   'Hogyan szerezhetek XP-t?',
-                  style: Theme.of(ctx).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900),
+                  style: Theme.of(ctx)
+                      .textTheme
+                      .titleLarge
+                      ?.copyWith(fontWeight: FontWeight.w900),
                 ),
               ),
               const SizedBox(height: 12),
@@ -759,10 +782,10 @@ Future<void> _claimDailyReward(String uid) async {
   // ----------------------------
 
   Widget _glassPanel(
-      BuildContext context, {
-        required Widget child,
-        EdgeInsets? padding,
-      }) {
+    BuildContext context, {
+    required Widget child,
+    EdgeInsets? padding,
+  }) {
     final scheme = Theme.of(context).colorScheme;
     return ClipRRect(
       borderRadius: BorderRadius.circular(24),
@@ -789,11 +812,11 @@ Future<void> _claimDailyReward(String uid) async {
   }
 
   Widget _sectionHeader(
-      BuildContext context, {
-        required String title,
-        String? subtitle,
-        Widget? trailing,
-      }) {
+    BuildContext context, {
+    required String title,
+    String? subtitle,
+    Widget? trailing,
+  }) {
     final t = Theme.of(context).textTheme;
     final scheme = Theme.of(context).colorScheme;
 
@@ -806,7 +829,9 @@ Future<void> _claimDailyReward(String uid) async {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(title, style: t.titleLarge?.copyWith(fontWeight: FontWeight.w900)),
+                Text(title,
+                    style:
+                        t.titleLarge?.copyWith(fontWeight: FontWeight.w900)),
                 if (subtitle != null) ...[
                   const SizedBox(height: 4),
                   Text(
@@ -827,12 +852,12 @@ Future<void> _claimDailyReward(String uid) async {
   }
 
   Widget _primaryActionChip(
-      BuildContext context, {
-        required IconData icon,
-        required String label,
-        required VoidCallback onPressed,
-        GlobalKey? key,
-      }) {
+    BuildContext context, {
+    required IconData icon,
+    required String label,
+    required VoidCallback onPressed,
+    GlobalKey? key,
+  }) {
     final scheme = Theme.of(context).colorScheme;
 
     return Material(
@@ -852,9 +877,9 @@ Future<void> _claimDailyReward(String uid) async {
               Text(
                 label,
                 style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                  color: scheme.onPrimary,
-                  fontWeight: FontWeight.w800,
-                ),
+                      color: scheme.onPrimary,
+                      fontWeight: FontWeight.w800,
+                    ),
               ),
             ],
           ),
@@ -914,6 +939,9 @@ Future<void> _claimDailyReward(String uid) async {
     final user = FirebaseAuth.instance.currentUser;
     final isSignedIn = user != null;
 
+    // ✅ UI oldali tiltás: ha claim folyamatban van, tekintsük úgy, mintha "ma már felvette"
+    final claimedOrClaiming = _metrics.claimedToday || _claimingDaily;
+
     return FadeTransition(
       opacity: _fadeIn,
       child: Stack(
@@ -926,7 +954,8 @@ Future<void> _claimDailyReward(String uid) async {
                 return false;
               },
               child: CustomScrollView(
-                physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
+                physics: const BouncingScrollPhysics(
+                    parent: AlwaysScrollableScrollPhysics()),
                 slivers: [
                   SliverAppBar(
                     pinned: false,
@@ -958,20 +987,26 @@ Future<void> _claimDailyReward(String uid) async {
                               children: [
                                 Text(
                                   isSignedIn ? 'Áttekintés' : 'Kezdőlap',
-                                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                                    fontWeight: FontWeight.w900,
-                                    letterSpacing: -0.2,
-                                  ),
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .titleLarge
+                                      ?.copyWith(
+                                        fontWeight: FontWeight.w900,
+                                        letterSpacing: -0.2,
+                                      ),
                                 ),
                                 const SizedBox(height: 8),
                                 Text(
                                   isSignedIn
                                       ? 'Üdvözlünk, $_displayName. Itt eléred az előrejelzést, statisztikát és a közösségi feedet.'
                                       : 'Böngészd a közösségi feedet. A teljes funkciókhoz jelentkezz be.',
-                                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                                    color: scheme.onSurfaceVariant,
-                                    height: 1.25,
-                                  ),
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .bodyLarge
+                                      ?.copyWith(
+                                        color: scheme.onSurfaceVariant,
+                                        height: 1.25,
+                                      ),
                                 ),
                               ],
                             ),
@@ -996,8 +1031,10 @@ Future<void> _claimDailyReward(String uid) async {
                             bestWindow: _metrics.bestWindow,
                             challengeText: _metrics.challengeText,
                             challengeProgress: _metrics.challengeProgress,
-                            claimedToday: _metrics.claimedToday,
-                            onClaim: isSignedIn ? () => _claimDailyReward(user!.uid) : null,
+                            claimedToday: claimedOrClaiming, // ✅
+                            onClaim: isSignedIn
+                                ? () => _claimDailyReward(user!.uid)
+                                : null,
                             onXpInfo: _showXpInfoSheet,
                           ),
                           const SizedBox(height: 18),
@@ -1009,21 +1046,24 @@ Future<void> _claimDailyReward(String uid) async {
                             _sectionHeader(
                               context,
                               title: 'AI előrejelzés',
-                              subtitle: 'Ajánlott idő, csali és célhal – strukturáltan.',
+                              subtitle:
+                                  'Ajánlott idő, csali és célhal – strukturáltan.',
                             ),
                             _glassPanel(
                               context,
                               padding: const EdgeInsets.all(16),
                               child: Container(
                                 key: _forecastKey,
-                                child: const ForecastCard(lat: 47.4979, lon: 19.0402),
+                                child: const ForecastCard(
+                                    lat: 47.4979, lon: 19.0402),
                               ),
                             ),
                             const SizedBox(height: 18),
                             _sectionHeader(
                               context,
                               title: 'Statisztikák',
-                              subtitle: 'Személyes eredmények és aktivitás összefoglaló.',
+                              subtitle:
+                                  'Személyes eredmények és aktivitás összefoglaló.',
                             ),
                             _glassPanel(
                               context,
@@ -1043,19 +1083,20 @@ Future<void> _claimDailyReward(String uid) async {
                                 : 'Böngészés elérhető, posztoláshoz bejelentkezés szükséges.',
                             trailing: isSignedIn
                                 ? _primaryActionChip(
-                              context,
-                              icon: Icons.add,
-                              label: 'Új poszt',
-                              key: _addPostKey,
-                              onPressed: () {
-                                AddPostDialog.show(
-                                  context,
-                                  onPostAdded: () async {
-                                    await _markPostedTodayAndReward(user!.uid);
-                                  },
-                                );
-                              },
-                            )
+                                    context,
+                                    icon: Icons.add,
+                                    label: 'Új poszt',
+                                    key: _addPostKey,
+                                    onPressed: () {
+                                      AddPostDialog.show(
+                                        context,
+                                        onPostAdded: () async {
+                                          await _markPostedTodayAndReward(
+                                              user!.uid);
+                                        },
+                                      );
+                                    },
+                                  )
                                 : null,
                           ),
                         ],
@@ -1079,24 +1120,31 @@ Future<void> _claimDailyReward(String uid) async {
                       padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
                       child: Container(
                         key: _footerKey,
-                        padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 10),
+                        padding: const EdgeInsets.symmetric(
+                            vertical: 14, horizontal: 10),
                         child: Column(
                           children: [
                             Text(
                               'Pecazom v$currentVersion',
-                              style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                                fontWeight: FontWeight.w800,
-                                color: scheme.primary,
-                              ),
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .labelLarge
+                                  ?.copyWith(
+                                    fontWeight: FontWeight.w800,
+                                    color: scheme.primary,
+                                  ),
                             ),
                             const SizedBox(height: 6),
                             Text(
                               'Visszajelzés: info@pecazom.hu',
                               textAlign: TextAlign.center,
-                              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                color: scheme.onSurfaceVariant,
-                                height: 1.25,
-                              ),
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .bodyMedium
+                                  ?.copyWith(
+                                    color: scheme.onSurfaceVariant,
+                                    height: 1.25,
+                                  ),
                             ),
                           ],
                         ),
@@ -1148,17 +1196,20 @@ Future<void> _claimDailyReward(String uid) async {
                             const SizedBox(height: 10),
                             Text(
                               'Frissítés kötelező',
-                              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                                fontWeight: FontWeight.w900,
-                              ),
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .titleLarge
+                                  ?.copyWith(
+                                    fontWeight: FontWeight.w900,
+                                  ),
                               textAlign: TextAlign.center,
                             ),
                             const SizedBox(height: 8),
                             Text(
                               'A folytatáshoz frissítened kell az alkalmazást.\n'
-                                  'Minimum verzió: ${_minVersion ?? "-"}\n'
-                                  'Jelenlegi: $currentVersion'
-                                  '${_latestVersion == null ? '' : '\nLegújabb: $_latestVersion'}',
+                              'Minimum verzió: ${_minVersion ?? "-"}\n'
+                              'Jelenlegi: $currentVersion'
+                              '${_latestVersion == null ? '' : '\nLegújabb: $_latestVersion'}',
                               textAlign: TextAlign.center,
                             ),
                             const SizedBox(height: 14),
@@ -1296,18 +1347,21 @@ class DailyHubCard extends StatelessWidget {
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(20),
                   color: scheme.surface.withOpacity(0.70),
-                  border: Border.all(color: scheme.outlineVariant.withOpacity(0.24)),
+                  border: Border.all(
+                      color: scheme.outlineVariant.withOpacity(0.24)),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Row(
                       children: [
-                        Icon(Icons.flag_rounded, color: scheme.primary, size: 18),
+                        Icon(Icons.flag_rounded,
+                            color: scheme.primary, size: 18),
                         const SizedBox(width: 8),
                         Text(
                           'Mai kihívás',
-                          style: t.titleMedium?.copyWith(fontWeight: FontWeight.w900),
+                          style:
+                              t.titleMedium?.copyWith(fontWeight: FontWeight.w900),
                         ),
                         const Spacer(),
                         if (isSignedIn)
@@ -1315,7 +1369,9 @@ class DailyHubCard extends StatelessWidget {
                             challengeProgress >= 1 ? 'Kész' : 'Folyamatban',
                             style: t.labelLarge?.copyWith(
                               fontWeight: FontWeight.w900,
-                              color: challengeProgress >= 1 ? scheme.primary : scheme.onSurfaceVariant,
+                              color: challengeProgress >= 1
+                                  ? scheme.primary
+                                  : scheme.onSurfaceVariant,
                             ),
                           ),
                       ],
@@ -1332,7 +1388,9 @@ class DailyHubCard extends StatelessWidget {
                     ClipRRect(
                       borderRadius: BorderRadius.circular(999),
                       child: LinearProgressIndicator(
-                        value: ((isSignedIn ? challengeProgress : 0.0).clamp(0.0, 1.0) as double),
+                        value: ((isSignedIn ? challengeProgress : 0.0)
+                                .clamp(0.0, 1.0)
+                            as double),
                         minHeight: 10,
                       ),
                     ),
@@ -1348,7 +1406,9 @@ class DailyHubCard extends StatelessWidget {
                           child: ClipRRect(
                             borderRadius: BorderRadius.circular(999),
                             child: LinearProgressIndicator(
-                              value: ((isSignedIn ? xpProgress : 0.0).clamp(0.0, 1.0) as double),
+                              value: ((isSignedIn ? xpProgress : 0.0)
+                                      .clamp(0.0, 1.0)
+                                  as double),
                               minHeight: 10,
                             ),
                           ),
@@ -1357,7 +1417,8 @@ class DailyHubCard extends StatelessWidget {
                         IconButton(
                           tooltip: 'Hogyan szerezhetek XP-t?',
                           onPressed: onXpInfo,
-                          icon: Icon(Icons.info_outline_rounded, color: scheme.primary),
+                          icon: Icon(Icons.info_outline_rounded,
+                              color: scheme.primary),
                         ),
                       ],
                     ),
@@ -1367,15 +1428,20 @@ class DailyHubCard extends StatelessWidget {
               const SizedBox(height: 14),
               if (isSignedIn)
                 FilledButton.icon(
+                  // ✅ claimedToday már tartalmazza a "claiming" állapotot is
                   onPressed: claimedToday ? null : onClaim,
                   icon: const Icon(Icons.card_giftcard_rounded),
-                  label: Text(claimedToday ? 'Mai jutalom felvéve' : 'Mai jutalom felvétele (+15 XP)'),
+                  label: Text(claimedToday
+                      ? 'Mai jutalom felvéve'
+                      : 'Mai jutalom felvétele (+15 XP)'),
                 )
               else
                 OutlinedButton.icon(
                   onPressed: () {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('A bejelentkezés a jobb felső sarokból érhető el.')),
+                      const SnackBar(
+                          content:
+                              Text('A bejelentkezés a jobb felső sarokból érhető el.')),
                     );
                   },
                   icon: const Icon(Icons.login),
@@ -1389,11 +1455,11 @@ class DailyHubCard extends StatelessWidget {
   }
 
   Widget _miniMetric(
-      BuildContext context, {
-        required IconData icon,
-        required String title,
-        required String value,
-      }) {
+    BuildContext context, {
+    required IconData icon,
+    required String title,
+    required String value,
+  }) {
     final scheme = Theme.of(context).colorScheme;
     final t = Theme.of(context).textTheme;
 
@@ -1412,8 +1478,10 @@ class DailyHubCard extends StatelessWidget {
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(title, style: t.labelMedium?.copyWith(color: scheme.onSurfaceVariant)),
-              Text(value, style: t.labelLarge?.copyWith(fontWeight: FontWeight.w900)),
+              Text(title,
+                  style: t.labelMedium?.copyWith(color: scheme.onSurfaceVariant)),
+              Text(value,
+                  style: t.labelLarge?.copyWith(fontWeight: FontWeight.w900)),
             ],
           ),
         ],
@@ -1450,4 +1518,3 @@ class _DailyMetrics {
     this.postedToday = false,
   });
 }
-
