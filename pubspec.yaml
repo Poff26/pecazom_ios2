@@ -72,10 +72,10 @@ dev_dependencies:
 flutter_launcher_icons:
   android: true
   ios: true
-  image_path: assets/pecazom_icon_1024.png
+  image_path: assets/pecazom_icon_1024 (2).png
   remove_alpha_ios: true
   adaptive_icon_background: "#FFFFFF"
-  adaptive_icon_foreground: assets/pecazom_icon_1024.png
+  adaptive_icon_foreground: assets/pecazom_icon_1024 (2).png
 
 # ============================================================
 # NATIVE SPLASH
