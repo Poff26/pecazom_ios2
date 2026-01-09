@@ -1,15 +1,15 @@
 // lib/screens/weather_screen.dart
 //
 // Egyetlen fájlba rendezve (FRISSÍTVE):
-// - WeatherService (WeatherAPI.com) + település-keresés (fetchWeatherByQuery)
+// - WeatherService (WeatherAPI.com) + település kereső javaslatok (search.json)
 // - Modellek (WeatherResponse + almodellek, toJson)
 // - getCurrentLocation()
-// - WeatherViewModel (60 perces SharedPreferences cache) + cacheKey GPS/település szerint
-// - WeatherScreen: kereső településre (város alapján frissít)
-// - Heatmap / meteo térkép: IDEIGLENESEN KIVÉVE A MEGJELENÍTÉSBŐL (UI-ból)
+// - WeatherViewModel (60 perces SharedPreferences cache) – GPS és település szerint kulcsolva
+// - Premium WeatherScreen: kereső felugró opciókkal (autocomplete dropdown)
+// - Heatmap / Meteo map: IDEIGLENESEN KIVÉVE A MEGJELENÍTÉSBŐL
 //
 // Fontos: add a pubspec.yaml-hoz:
-//   google_maps_flutter, geolocator, http, provider, fl_chart, shared_preferences
+//   geolocator, http, provider, fl_chart, shared_preferences
 //
 // Megjegyzés: A WeatherAPI kulcsot változatlanul hagytam.
 
@@ -24,50 +24,6 @@ import 'package:geolocator/geolocator.dart';
 import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-
-/// ─────────────────────────────────────────────────────────────────────────────
-/// Service: WeatherService
-/// ─────────────────────────────────────────────────────────────────────────────
-class WeatherService {
-  static const String _apiKey = '683c54e2bff5444aaa6203219252703';
-  static const String _baseUrl = 'https://api.weatherapi.com/v1/forecast.json';
-
-  Future<WeatherResponse> fetchCurrentWeather({
-    required double lat,
-    required double lon,
-  }) async {
-    final uri = Uri.parse(
-      '$_baseUrl?key=$_apiKey&q=$lat,$lon&days=3&aqi=no&alerts=no',
-    );
-
-    final response = await http.get(uri);
-    if (response.statusCode != 200) {
-      throw Exception('Failed to load weather data (${response.statusCode})');
-    }
-
-    final Map<String, dynamic> jsonMap = jsonDecode(response.body);
-    return WeatherResponse.fromJson(jsonMap);
-  }
-
-  /// ÚJ: település / keresőkifejezés alapú lekérés
-  /// Példák: "Budapest", "Jászberény", "Szeged", "Győr"
-  Future<WeatherResponse> fetchWeatherByQuery({
-    required String query,
-  }) async {
-    final q = Uri.encodeComponent(query.trim());
-    final uri = Uri.parse(
-      '$_baseUrl?key=$_apiKey&q=$q&days=3&aqi=no&alerts=no',
-    );
-
-    final response = await http.get(uri);
-    if (response.statusCode != 200) {
-      throw Exception('Nem található település / hiba (${response.statusCode})');
-    }
-
-    final Map<String, dynamic> jsonMap = jsonDecode(response.body);
-    return WeatherResponse.fromJson(jsonMap);
-  }
-}
 
 /// ─────────────────────────────────────────────────────────────────────────────
 /// Util: getCurrentLocation
@@ -370,7 +326,91 @@ class ForecastDay {
 }
 
 /// ─────────────────────────────────────────────────────────────────────────────
-/// ViewModel: 60 perces cache (SharedPreferences) – GPS és település szerint kulcsolva
+/// City suggestions (WeatherAPI search.json)
+/// ─────────────────────────────────────────────────────────────────────────────
+class CitySuggestion {
+  final String name;
+  final String region;
+  final String country;
+  final double lat;
+  final double lon;
+
+  CitySuggestion({
+    required this.name,
+    required this.region,
+    required this.country,
+    required this.lat,
+    required this.lon,
+  });
+
+  factory CitySuggestion.fromJson(Map<String, dynamic> json) => CitySuggestion(
+        name: (json['name'] ?? '') as String,
+        region: (json['region'] ?? '') as String,
+        country: (json['country'] ?? '') as String,
+        lat: (json['lat'] as num).toDouble(),
+        lon: (json['lon'] as num).toDouble(),
+      );
+
+  String get displayLine {
+    final parts = <String>[name];
+    if (region.trim().isNotEmpty) parts.add(region);
+    if (country.trim().isNotEmpty) parts.add(country);
+    return parts.join(', ');
+  }
+}
+
+/// ─────────────────────────────────────────────────────────────────────────────
+/// Service: WeatherService
+/// ─────────────────────────────────────────────────────────────────────────────
+class WeatherService {
+  static const String _apiKey = '683c54e2bff5444aaa6203219252703';
+  static const String _baseUrl = 'https://api.weatherapi.com/v1/forecast.json';
+  static const String _searchUrl = 'https://api.weatherapi.com/v1/search.json';
+
+  Future<WeatherResponse> fetchCurrentWeather({
+    required double lat,
+    required double lon,
+  }) async {
+    final uri = Uri.parse('$_baseUrl?key=$_apiKey&q=$lat,$lon&days=3&aqi=no&alerts=no');
+
+    final response = await http.get(uri);
+    if (response.statusCode != 200) {
+      throw Exception('Failed to load weather data (${response.statusCode})');
+    }
+
+    final Map<String, dynamic> jsonMap = jsonDecode(response.body);
+    return WeatherResponse.fromJson(jsonMap);
+  }
+
+  Future<WeatherResponse> fetchWeatherByQuery({required String query}) async {
+    final q = Uri.encodeComponent(query.trim());
+    final uri = Uri.parse('$_baseUrl?key=$_apiKey&q=$q&days=3&aqi=no&alerts=no');
+
+    final response = await http.get(uri);
+    if (response.statusCode != 200) {
+      throw Exception('Nem található település / hiba (${response.statusCode})');
+    }
+
+    final Map<String, dynamic> jsonMap = jsonDecode(response.body);
+    return WeatherResponse.fromJson(jsonMap);
+  }
+
+  Future<List<CitySuggestion>> searchCities(String query) async {
+    final q = Uri.encodeComponent(query.trim());
+    final uri = Uri.parse('$_searchUrl?key=$_apiKey&q=$q');
+
+    final response = await http.get(uri);
+    if (response.statusCode != 200) {
+      throw Exception('City search failed (${response.statusCode})');
+    }
+
+    final List<dynamic> raw = jsonDecode(response.body) as List<dynamic>;
+    return raw.map((e) => CitySuggestion.fromJson(e as Map<String, dynamic>)).toList();
+  }
+}
+
+/// ─────────────────────────────────────────────────────────────────────────────
+/// ViewModel: 60 perces cache (SharedPreferences) – GPS / település kulccsal
 /// ─────────────────────────────────────────────────────────────────────────────
 class WeatherViewModel extends ChangeNotifier {
   final WeatherService _weatherService;
@@ -482,7 +522,7 @@ class _FishingWindow {
 }
 
 /// ─────────────────────────────────────────────────────────────────────────────
-/// WeatherScreen (Premium) – keresővel, heatmap UI nélkül
+/// WeatherScreen (Premium) – kereső felugró opciókkal, heatmap UI nélkül
 /// ─────────────────────────────────────────────────────────────────────────────
 class WeatherScreen extends StatefulWidget {
   const WeatherScreen({super.key});
@@ -493,6 +533,7 @@ class WeatherScreen extends StatefulWidget {
 
 class _WeatherScreenState extends State<WeatherScreen> with TickerProviderStateMixin {
   final viewModel = WeatherViewModel();
+  final WeatherService _svc = WeatherService();
 
   Timer? _refreshTimer;
   Timer? _timeoutTimer;
@@ -516,13 +557,25 @@ class _WeatherScreenState extends State<WeatherScreen> with TickerProviderStateM
     duration: const Duration(milliseconds: 1600),
   )..repeat(reverse: true);
 
-  // KERESŐ
+  // Search state
   final TextEditingController _cityCtrl = TextEditingController();
+  final FocusNode _cityFocus = FocusNode();
+
+  Timer? _cityDebounce;
+  List<CitySuggestion> _citySuggestions = [];
+  bool _suggestLoading = false;
+  int _suggestReqId = 0;
+
   String? _lastCityQuery;
 
   @override
   void initState() {
     super.initState();
+    _cityFocus.addListener(() {
+      if (!mounted) return;
+      setState(() {}); // hogy a dropdown azonnal megjelenjen / eltűnjön
+    });
+
     _loadLocationAndWeather();
     _refreshTimer = Timer.periodic(const Duration(minutes: 30), (_) => _loadLocationAndWeather());
   }
@@ -534,7 +587,11 @@ class _WeatherScreenState extends State<WeatherScreen> with TickerProviderStateM
     _fadeCtrl.dispose();
     _pulseCtrl.dispose();
     _scrollY.dispose();
+
+    _cityDebounce?.cancel();
     _cityCtrl.dispose();
+    _cityFocus.dispose();
+
     viewModel.dispose();
     super.dispose();
   }
@@ -563,12 +620,66 @@ class _WeatherScreenState extends State<WeatherScreen> with TickerProviderStateM
     }
   }
 
-  Future<void> _searchCityAndLoad(String raw) async {
+  void _onCityChanged(String v) {
+    final q = v.trim();
+
+    _cityDebounce?.cancel();
+
+    if (q.length < 2) {
+      setState(() {
+        _citySuggestions = [];
+        _suggestLoading = false;
+      });
+      return;
+    }
+
+    _cityDebounce = Timer(const Duration(milliseconds: 350), () async {
+      final int reqId = ++_suggestReqId;
+
+      if (mounted) {
+        setState(() => _suggestLoading = true);
+      }
+
+      try {
+        final res = await _svc.searchCities(q);
+        if (!mounted || reqId != _suggestReqId) return;
+
+        setState(() {
+          _citySuggestions = res.take(8).toList();
+          _suggestLoading = false;
+        });
+      } catch (_) {
+        if (!mounted || reqId != _suggestReqId) return;
+        setState(() {
+          _citySuggestions = [];
+          _suggestLoading = false;
+        });
+      }
+    });
+  }
+
+  Future<void> _selectSuggestion(CitySuggestion s) async {
+    _cityCtrl.text = s.name;
+    _lastCityQuery = s.name;
+
+    if (mounted) {
+      setState(() => _citySuggestions = []);
+      FocusScope.of(context).unfocus();
+    }
+
+    await viewModel.loadWeatherByCity(s.name, force: true);
+  }
+
+  Future<void> _submitCity(String raw) async {
     final q = raw.trim();
     if (q.isEmpty) return;
+
     _lastCityQuery = q;
+    if (mounted) {
+      setState(() => _citySuggestions = []);
+      FocusScope.of(context).unfocus();
+    }
     await viewModel.loadWeatherByCity(q, force: true);
-    if (mounted) FocusScope.of(context).unfocus();
   }
 
   // ----------------- Safe accessor -----------------
@@ -1050,13 +1161,11 @@ class _WeatherScreenState extends State<WeatherScreen> with TickerProviderStateM
             IconButton(
               tooltip: 'Frissítés (force)',
               onPressed: () async {
-                // Ha volt utolsó település-keresés, akkor azt frissítjük
                 if ((_lastCityQuery ?? '').trim().isNotEmpty) {
                   await viewModel.loadWeatherByCity(_lastCityQuery!, force: true);
                   return;
                 }
 
-                // különben GPS
                 final pos = await getCurrentLocation();
                 if (pos != null) {
                   await viewModel.loadWeatherByGps(pos.latitude, pos.longitude, force: true);
@@ -1070,49 +1179,126 @@ class _WeatherScreenState extends State<WeatherScreen> with TickerProviderStateM
     );
   }
 
+  /// Kereső + felugró javaslatok (dropdown)
   Widget _citySearchBar(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
 
-    return _glassSurface(
-      context,
-      radius: BorderRadius.circular(22),
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-      child: Row(
-        children: [
-          Icon(Icons.search, color: scheme.onSurfaceVariant),
-          const SizedBox(width: 10),
-          Expanded(
-            child: TextField(
-              controller: _cityCtrl,
-              textInputAction: TextInputAction.search,
-              decoration: InputDecoration(
-                hintText: 'Keress településre (pl. Budapest, Jászberény)',
-                border: InputBorder.none,
-                isDense: true,
-                hintStyle: TextStyle(color: scheme.onSurfaceVariant.withOpacity(0.9)),
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        _glassSurface(
+          context,
+          radius: BorderRadius.circular(22),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          child: Row(
+            children: [
+              Icon(Icons.search, color: scheme.onSurfaceVariant),
+              const SizedBox(width: 10),
+              Expanded(
+                child: TextField(
+                  controller: _cityCtrl,
+                  focusNode: _cityFocus,
+                  textInputAction: TextInputAction.search,
+                  decoration: InputDecoration(
+                    hintText: 'Keress településre (pl. Jászberény)',
+                    border: InputBorder.none,
+                    isDense: true,
+                    hintStyle: TextStyle(color: scheme.onSurfaceVariant.withOpacity(0.9)),
+                  ),
+                  onChanged: _onCityChanged,
+                  onSubmitted: _submitCity,
+                ),
               ),
-              onSubmitted: _searchCityAndLoad,
+              if (_suggestLoading) ...[
+                const SizedBox(width: 6),
+                SizedBox(
+                  width: 18,
+                  height: 18,
+                  child: CircularProgressIndicator(strokeWidth: 2, color: scheme.primary),
+                ),
+                const SizedBox(width: 6),
+              ],
+              IconButton(
+                tooltip: 'Keresés',
+                onPressed: () => _submitCity(_cityCtrl.text),
+                icon: const Icon(Icons.arrow_forward),
+              ),
+              IconButton(
+                tooltip: 'Vissza helyalapúra',
+                onPressed: () async {
+                  _lastCityQuery = null;
+                  if (mounted) setState(() => _citySuggestions = []);
+                  final pos = await getCurrentLocation();
+                  if (pos != null) {
+                    await viewModel.loadWeatherByGps(pos.latitude, pos.longitude, force: true);
+                  }
+                },
+                icon: const Icon(Icons.my_location),
+              ),
+            ],
+          ),
+        ),
+
+        if (_cityFocus.hasFocus && _citySuggestions.isNotEmpty)
+          Positioned(
+            left: 0,
+            right: 0,
+            top: 64,
+            child: Material(
+              color: Colors.transparent,
+              child: _glassSurface(
+                context,
+                radius: BorderRadius.circular(18),
+                padding: const EdgeInsets.all(8),
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxHeight: 260),
+                  child: ListView.separated(
+                    shrinkWrap: true,
+                    padding: EdgeInsets.zero,
+                    itemCount: _citySuggestions.length,
+                    separatorBuilder: (_, __) => Divider(height: 1, color: scheme.outlineVariant.withOpacity(0.35)),
+                    itemBuilder: (_, i) {
+                      final s = _citySuggestions[i];
+                      return InkWell(
+                        borderRadius: BorderRadius.circular(12),
+                        onTap: () => _selectSuggestion(s),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+                          child: Row(
+                            children: [
+                              Icon(Icons.place_outlined, size: 18, color: scheme.onSurfaceVariant),
+                              const SizedBox(width: 10),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      s.name,
+                                      style: const TextStyle(fontWeight: FontWeight.w900),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                    const SizedBox(height: 2),
+                                    Text(
+                                      '${s.region}${s.region.isNotEmpty ? ', ' : ''}${s.country}',
+                                      style: TextStyle(color: scheme.onSurfaceVariant, fontWeight: FontWeight.w700),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ),
             ),
           ),
-          const SizedBox(width: 8),
-          IconButton(
-            tooltip: 'Keresés',
-            onPressed: () => _searchCityAndLoad(_cityCtrl.text),
-            icon: const Icon(Icons.arrow_forward),
-          ),
-          IconButton(
-            tooltip: 'Vissza helyalapúra',
-            onPressed: () async {
-              _lastCityQuery = null;
-              final pos = await getCurrentLocation();
-              if (pos != null) {
-                await viewModel.loadWeatherByGps(pos.latitude, pos.longitude, force: true);
-              }
-            },
-            icon: const Icon(Icons.my_location),
-          ),
-        ],
-      ),
+      ],
     );
   }
 
@@ -1626,201 +1812,203 @@ class _WeatherScreenState extends State<WeatherScreen> with TickerProviderStateM
       value: viewModel,
       child: Scaffold(
         backgroundColor: scheme.surface,
-        body: Stack(
-          children: [
-            _parallaxBackground(context),
-            SafeArea(
-              child: Consumer<WeatherViewModel>(
-                builder: (_, vm, __) {
-                  if (vm.error.isNotEmpty) return _errorState(context, vm.error);
+        body: GestureDetector(
+          behavior: HitTestBehavior.translucent,
+          onTap: () {
+            FocusScope.of(context).unfocus();
+            if (mounted) setState(() => _citySuggestions = []);
+          },
+          child: Stack(
+            children: [
+              _parallaxBackground(context),
+              SafeArea(
+                child: Consumer<WeatherViewModel>(
+                  builder: (_, vm, __) {
+                    if (vm.error.isNotEmpty) return _errorState(context, vm.error);
 
-                  if (vm.weather == null) {
-                    if (vm.isLoading && !_timedOut) {
-                      return FadeTransition(opacity: _fade, child: _skeleton(context));
+                    if (vm.weather == null) {
+                      if (vm.isLoading && !_timedOut) {
+                        return FadeTransition(opacity: _fade, child: _skeleton(context));
+                      }
+                      return _emptyState(context);
                     }
-                    return _emptyState(context);
-                  }
 
-                  final w = vm.weather!;
-                  final hourly = w.forecast.forecastday.first.hour;
-                  final pressures = hourly.map((h) => h.pressureMb).toList();
-                  final daily = w.forecast.forecastday;
+                    final w = vm.weather!;
+                    final hourly = w.forecast.forecastday.first.hour;
+                    final pressures = hourly.map((h) => h.pressureMb).toList();
+                    final daily = w.forecast.forecastday;
 
-                  return FadeTransition(
-                    opacity: _fade,
-                    child: NotificationListener<ScrollNotification>(
-                      onNotification: (n) {
-                        if (n.metrics.axis == Axis.vertical) _scrollY.value = n.metrics.pixels;
-                        return false;
-                      },
-                      child: RefreshIndicator(
-                        onRefresh: _loadLocationAndWeather,
-                        child: SingleChildScrollView(
-                          physics: const AlwaysScrollableScrollPhysics(),
-                          padding: _pagePad,
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              _header(context, w),
-                              const SizedBox(height: 12),
-                              _citySearchBar(context),
-                              const SizedBox(height: 12),
+                    return FadeTransition(
+                      opacity: _fade,
+                      child: NotificationListener<ScrollNotification>(
+                        onNotification: (n) {
+                          if (n.metrics.axis == Axis.vertical) _scrollY.value = n.metrics.pixels;
+                          return false;
+                        },
+                        child: RefreshIndicator(
+                          onRefresh: _loadLocationAndWeather,
+                          child: SingleChildScrollView(
+                            physics: const AlwaysScrollableScrollPhysics(),
+                            padding: _pagePad,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                _header(context, w),
+                                const SizedBox(height: 12),
+                                _citySearchBar(context),
+                                const SizedBox(height: 12),
 
-                              _sectionTitle(context, title: 'Aktuális állapot', subtitle: 'Gyors, jól olvasható összefoglaló.'),
-                              _heroCurrent(context, w),
+                                _sectionTitle(context, title: 'Aktuális állapot', subtitle: 'Gyors, jól olvasható összefoglaló.'),
+                                _heroCurrent(context, w),
 
-                              _sectionTitle(context, title: 'Kapási ablakok', subtitle: 'Top 3 kétórás időablak a mai napból, pontszámmal.'),
-                              _fishingWindowsSection(context, w),
+                                _sectionTitle(context, title: 'Kapási ablakok', subtitle: 'Top 3 kétórás időablak a mai napból, pontszámmal.'),
+                                _fishingWindowsSection(context, w),
 
-                              _sectionTitle(context, title: 'Részletek', subtitle: 'Kiemelt mérőszámok gyors áttekintéshez.'),
-                              LayoutBuilder(
-                                builder: (context, c) {
-                                  final itemWidth = (c.maxWidth - 10) / 2;
-                                  return Wrap(
-                                    spacing: 10,
-                                    runSpacing: 10,
-                                    children: [
-                                      SizedBox(width: itemWidth, child: _metricCard(context, icon: Icons.water_drop_outlined, label: 'Páratartalom', value: '${w.current.humidity}%')),
-                                      SizedBox(width: itemWidth, child: _metricCard(context, icon: Icons.air, label: 'Szél', value: '${w.current.windKph.toStringAsFixed(1)} km/h • ${_displayWindDir(w.current.windDir)}')),
-                                      SizedBox(width: itemWidth, child: _metricCard(context, icon: Icons.thermostat_outlined, label: 'Hőérzet', value: '${w.current.feelslikeC.toStringAsFixed(1)}°C')),
-                                      SizedBox(width: itemWidth, child: _metricCard(context, icon: Icons.speed, label: 'Légnyomás', value: '${w.current.pressureMb.toStringAsFixed(0)} mb')),
-                                      SizedBox(width: itemWidth, child: _metricCard(context, icon: Icons.visibility_outlined, label: 'Látótávolság', value: '${w.current.visKm.toStringAsFixed(1)} km')),
-                                      SizedBox(width: itemWidth, child: _metricCard(context, icon: Icons.grain, label: 'Csapadék', value: '${w.current.precipMm.toStringAsFixed(1)} mm')),
-                                      SizedBox(width: itemWidth, child: _metricCard(context, icon: Icons.wb_sunny_outlined, label: 'UV-index', value: '${w.current.uv.toStringAsFixed(1)}')),
-                                    ],
-                                  );
-                                },
-                              ),
-
-                              _sectionTitle(context, title: 'Óránkénti légnyomás', subtitle: 'Trend az aktuális nap óráiban.'),
-                              _glassSurface(
-                                context,
-                                padding: const EdgeInsets.all(16),
-                                radius: BorderRadius.circular(26),
-                                child: HourlyPressureChart(data: pressures),
-                              ),
-
-                              _sectionTitle(context, title: 'Óránkénti előrejelzés', subtitle: 'Hőmérséklet, nyomás, eső esély és páratartalom.'),
-                              SizedBox(
-                                height: 170,
-                                child: ListView.separated(
-                                  scrollDirection: Axis.horizontal,
-                                  itemCount: hourly.length,
-                                  separatorBuilder: (_, __) => const SizedBox(width: 10),
-                                  itemBuilder: (c, i) {
-                                    final h = hourly[i];
-                                    final time = _hhmmFromWeatherTime(h.time);
-
-                                    final rawIcon = h.conditionIcon;
-                                    final hasIcon = rawIcon.trim().isNotEmpty;
-                                    final iconUrl = hasIcon ? (rawIcon.startsWith('http') ? rawIcon : 'https:$rawIcon') : '';
-
-                                    final temp = h.tempC.toStringAsFixed(0);
-                                    final pr = h.pressureMb.toStringAsFixed(0);
-                                    final rain = h.chanceOfRain;
-                                    final hum = h.humidity;
-
-                                    return SizedBox(
-                                      width: 158,
-                                      child: _glassSurface(
-                                        context,
-                                        padding: const EdgeInsets.all(14),
-                                        radius: BorderRadius.circular(22),
-                                        child: Column(
-                                          crossAxisAlignment: CrossAxisAlignment.start,
-                                          children: [
-                                            Text(time, style: const TextStyle(fontWeight: FontWeight.w900)),
-                                            const SizedBox(height: 10),
-                                            Row(
-                                              children: [
-                                                if (hasIcon)
-                                                  Image.network(
-                                                    iconUrl,
-                                                    width: 34,
-                                                    height: 34,
-                                                    errorBuilder: (_, __, ___) => const Icon(Icons.cloud_outlined, size: 28),
-                                                  )
-                                                else
-                                                  const Icon(Icons.cloud_outlined, size: 28),
-                                                const SizedBox(width: 10),
-                                                Text('$temp°C', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900)),
-                                              ],
-                                            ),
-                                            const SizedBox(height: 10),
-                                            Text('Nyomás: $pr mb', style: TextStyle(color: scheme.onSurfaceVariant)),
-                                            Text('Eső: $rain%', style: TextStyle(color: scheme.onSurfaceVariant)),
-                                            Text('Pára: $hum%', style: TextStyle(color: scheme.onSurfaceVariant)),
-                                          ],
-                                        ),
-                                      ),
+                                _sectionTitle(context, title: 'Részletek', subtitle: 'Kiemelt mérőszámok gyors áttekintéshez.'),
+                                LayoutBuilder(
+                                  builder: (context, c) {
+                                    final itemWidth = (c.maxWidth - 10) / 2;
+                                    return Wrap(
+                                      spacing: 10,
+                                      runSpacing: 10,
+                                      children: [
+                                        SizedBox(width: itemWidth, child: _metricCard(context, icon: Icons.water_drop_outlined, label: 'Páratartalom', value: '${w.current.humidity}%')),
+                                        SizedBox(width: itemWidth, child: _metricCard(context, icon: Icons.air, label: 'Szél', value: '${w.current.windKph.toStringAsFixed(1)} km/h • ${_displayWindDir(w.current.windDir)}')),
+                                        SizedBox(width: itemWidth, child: _metricCard(context, icon: Icons.thermostat_outlined, label: 'Hőérzet', value: '${w.current.feelslikeC.toStringAsFixed(1)}°C')),
+                                        SizedBox(width: itemWidth, child: _metricCard(context, icon: Icons.speed, label: 'Légnyomás', value: '${w.current.pressureMb.toStringAsFixed(0)} mb')),
+                                        SizedBox(width: itemWidth, child: _metricCard(context, icon: Icons.visibility_outlined, label: 'Látótávolság', value: '${w.current.visKm.toStringAsFixed(1)} km')),
+                                        SizedBox(width: itemWidth, child: _metricCard(context, icon: Icons.grain, label: 'Csapadék', value: '${w.current.precipMm.toStringAsFixed(1)} mm')),
+                                        SizedBox(width: itemWidth, child: _metricCard(context, icon: Icons.wb_sunny_outlined, label: 'UV-index', value: '${w.current.uv.toStringAsFixed(1)}')),
+                                      ],
                                     );
                                   },
                                 ),
-                              ),
 
-                              _sectionTitle(context, title: 'Napi előrejelzés', subtitle: 'Átlag, nyomás és eső esély napokra bontva.'),
-                              SizedBox(
-                                height: 154,
-                                child: ListView.separated(
-                                  scrollDirection: Axis.horizontal,
-                                  itemCount: daily.length,
-                                  separatorBuilder: (_, __) => const SizedBox(width: 10),
-                                  itemBuilder: (c, i) {
-                                    final d = daily[i];
-                                    final avgTemp = ((d.day.maxTempC + d.day.minTempC) / 2).round();
-
-                                    final midHour = d.hour.length > 12 ? d.hour[12] : d.hour.first;
-                                    final today = DateTime.now();
-                                    final dDate = DateTime.tryParse(d.date) ?? today;
-                                    final isToday = dDate.year == today.year && dDate.month == today.month && dDate.day == today.day;
-
-                                    final midPressure = midHour.pressureMb;
-
-                                    return SizedBox(
-                                      width: 182,
-                                      child: _glassSurface(
-                                        context,
-                                        padding: const EdgeInsets.all(14),
-                                        radius: BorderRadius.circular(22),
-                                        child: Column(
-                                          crossAxisAlignment: CrossAxisAlignment.start,
-                                          children: [
-                                            Text(_weekdayHu(d.date), style: const TextStyle(fontWeight: FontWeight.w900)),
-                                            const SizedBox(height: 4),
-                                            Text(
-                                              isToday ? 'Ma' : _shortDate(d.date),
-                                              style: TextStyle(color: scheme.onSurfaceVariant, fontWeight: FontWeight.w700),
-                                            ),
-                                            const SizedBox(height: 12),
-                                            Text('Átlag: $avgTemp°C', style: const TextStyle(fontWeight: FontWeight.w900)),
-                                            const SizedBox(height: 6),
-                                            Text('Nyomás: ${midPressure.toStringAsFixed(0)} mb', style: TextStyle(color: scheme.onSurfaceVariant)),
-                                            Text('Eső esély: ${d.day.dailyChanceOfRain}%', style: TextStyle(color: scheme.onSurfaceVariant)),
-                                          ],
-                                        ),
-                                      ),
-                                    );
-                                  },
+                                _sectionTitle(context, title: 'Óránkénti légnyomás', subtitle: 'Trend az aktuális nap óráiban.'),
+                                _glassSurface(
+                                  context,
+                                  padding: const EdgeInsets.all(16),
+                                  radius: BorderRadius.circular(26),
+                                  child: HourlyPressureChart(data: pressures),
                                 ),
-                              ),
 
-                              // ───────────────────────────────────────────────────────────
-                              // METEO / HEATMAP: IDEIGLENESEN KIVÉVE A MEGJELENÍTÉSBŐL
-                              // ───────────────────────────────────────────────────────────
-                              // _sectionTitle(context, title: 'Meteo térkép', subtitle: 'Heatmap / pontfelhő + poligonok (frontok, zónák).'),
-                              // _meteoMapSection(context, w),
+                                _sectionTitle(context, title: 'Óránkénti előrejelzés', subtitle: 'Hőmérséklet, nyomás, eső esély és páratartalom.'),
+                                SizedBox(
+                                  height: 170,
+                                  child: ListView.separated(
+                                    scrollDirection: Axis.horizontal,
+                                    itemCount: hourly.length,
+                                    separatorBuilder: (_, __) => const SizedBox(width: 10),
+                                    itemBuilder: (c, i) {
+                                      final h = hourly[i];
+                                      final time = _hhmmFromWeatherTime(h.time);
 
-                              const SizedBox(height: 10),
-                            ],
+                                      final rawIcon = h.conditionIcon;
+                                      final hasIcon = rawIcon.trim().isNotEmpty;
+                                      final iconUrl = hasIcon ? (rawIcon.startsWith('http') ? rawIcon : 'https:$rawIcon') : '';
+
+                                      final temp = h.tempC.toStringAsFixed(0);
+                                      final pr = h.pressureMb.toStringAsFixed(0);
+                                      final rain = h.chanceOfRain;
+                                      final hum = h.humidity;
+
+                                      return SizedBox(
+                                        width: 158,
+                                        child: _glassSurface(
+                                          context,
+                                          padding: const EdgeInsets.all(14),
+                                          radius: BorderRadius.circular(22),
+                                          child: Column(
+                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            children: [
+                                              Text(time, style: const TextStyle(fontWeight: FontWeight.w900)),
+                                              const SizedBox(height: 10),
+                                              Row(
+                                                children: [
+                                                  if (hasIcon)
+                                                    Image.network(
+                                                      iconUrl,
+                                                      width: 34,
+                                                      height: 34,
+                                                      errorBuilder: (_, __, ___) => const Icon(Icons.cloud_outlined, size: 28),
+                                                    )
+                                                  else
+                                                    const Icon(Icons.cloud_outlined, size: 28),
+                                                  const SizedBox(width: 10),
+                                                  Text('$temp°C', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900)),
+                                                ],
+                                              ),
+                                              const SizedBox(height: 10),
+                                              Text('Nyomás: $pr mb', style: TextStyle(color: scheme.onSurfaceVariant)),
+                                              Text('Eső: $rain%', style: TextStyle(color: scheme.onSurfaceVariant)),
+                                              Text('Pára: $hum%', style: TextStyle(color: scheme.onSurfaceVariant)),
+                                            ],
+                                          ),
+                                        ),
+                                      );
+                                    },
+                                  ),
+                                ),
+
+                                _sectionTitle(context, title: 'Napi előrejelzés', subtitle: 'Átlag, nyomás és eső esély napokra bontva.'),
+                                SizedBox(
+                                  height: 154,
+                                  child: ListView.separated(
+                                    scrollDirection: Axis.horizontal,
+                                    itemCount: daily.length,
+                                    separatorBuilder: (_, __) => const SizedBox(width: 10),
+                                    itemBuilder: (c, i) {
+                                      final d = daily[i];
+                                      final avgTemp = ((d.day.maxTempC + d.day.minTempC) / 2).round();
+
+                                      final midHour = d.hour.length > 12 ? d.hour[12] : d.hour.first;
+                                      final today = DateTime.now();
+                                      final dDate = DateTime.tryParse(d.date) ?? today;
+                                      final isToday = dDate.year == today.year && dDate.month == today.month && dDate.day == today.day;
+
+                                      final midPressure = midHour.pressureMb;
+
+                                      return SizedBox(
+                                        width: 182,
+                                        child: _glassSurface(
+                                          context,
+                                          padding: const EdgeInsets.all(14),
+                                          radius: BorderRadius.circular(22),
+                                          child: Column(
+                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            children: [
+                                              Text(_weekdayHu(d.date), style: const TextStyle(fontWeight: FontWeight.w900)),
+                                              const SizedBox(height: 4),
+                                              Text(
+                                                isToday ? 'Ma' : _shortDate(d.date),
+                                                style: TextStyle(color: scheme.onSurfaceVariant, fontWeight: FontWeight.w700),
+                                              ),
+                                              const SizedBox(height: 12),
+                                              Text('Átlag: $avgTemp°C', style: const TextStyle(fontWeight: FontWeight.w900)),
+                                              const SizedBox(height: 6),
+                                              Text('Nyomás: ${midPressure.toStringAsFixed(0)} mb', style: TextStyle(color: scheme.onSurfaceVariant)),
+                                              Text('Eső esély: ${d.day.dailyChanceOfRain}%', style: TextStyle(color: scheme.onSurfaceVariant)),
+                                            ],
+                                          ),
+                                        ),
+                                      );
+                                    },
+                                  ),
+                                ),
+
+                                // METEO/HEATMAP: ideiglenesen kivéve
+                                const SizedBox(height: 10),
+                              ],
+                            ),
                           ),
                         ),
                       ),
-                    ),
-                  );
-                },
+                    );
+                  },
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
