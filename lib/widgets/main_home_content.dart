@@ -566,64 +566,67 @@ class _MainHomeContentState extends State<MainHomeContent> with TickerProviderSt
     } catch (_) {}
   }
 
-  Future<void> _claimDailyReward(String uid) async {
-    try {
-      final today = _todayKey();
+Future<void> _claimDailyReward(String uid) async {
+  if (_claimingDaily) return; // ✅ dupla tap ellen
+  setState(() => _claimingDaily = true);
 
-      int gained = 0;
+  try {
+    final today = _todayKey();
+    int gained = 0;
 
-      await FirebaseFirestore.instance.runTransaction((tx) async {
-        final ref = _usersRef.doc(uid);
-        final snap = await tx.get(ref);
-        final data = snap.data() ?? {};
+    await FirebaseFirestore.instance.runTransaction((tx) async {
+      final ref = _usersRef.doc(uid);
+      final snap = await tx.get(ref);
+      final data = snap.data() ?? {};
 
-        final String? claimedDate = data['claimedDate'] as String?;
-        if (claimedDate == today) return;
+      final String? claimedDate = data['claimedDate'] as String?;
+      if (claimedDate == today) return;
 
-        final int xp = (data['xp'] as num?)?.toInt() ?? 0;
-        final int streakDays = (data['streakDays'] as num?)?.toInt() ?? 0;
+      final int streakDays = (data['streakDays'] as num?)?.toInt() ?? 0;
+      final lastClaimed = _parseDay(claimedDate);
+      final cur = _parseDay(today) ?? DateTime.now();
 
-        final lastClaimed = _parseDay(claimedDate);
-        final cur = _parseDay(today) ?? DateTime.now();
-
-        int newStreak;
-        if (lastClaimed == null) {
-          newStreak = 1;
-        } else if (_isYesterday(lastClaimed, cur)) {
-          newStreak = (streakDays <= 0) ? 1 : (streakDays + 1);
-        } else {
-          newStreak = 1;
-        }
-
-        final int newXp = xp + _dailyClaimXp;
-        gained = _dailyClaimXp;
-
-        tx.set(
-          ref,
-          {
-            'xp': newXp,
-            'level': _levelFromXp(newXp),
-            'claimedDate': today,
-            'streakDays': newStreak,
-            'lastOpenDate': today,
-          },
-          SetOptions(merge: true),
-        );
-      });
-
-      if (!mounted) return;
-
-      if (gained == 0) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('A mai jutalmat már felvetted.')),
-        );
-        return;
+      int newStreak;
+      if (lastClaimed == null) {
+        newStreak = 1;
+      } else if (_isYesterday(lastClaimed, cur)) {
+        newStreak = (streakDays <= 0) ? 1 : (streakDays + 1);
+      } else {
+        newStreak = 1;
       }
 
-      _showXpGain(gained);
-      await _refreshDailyMetrics(uid);
-    } catch (_) {}
+      gained = _dailyClaimXp;
+
+      // ✅ ATOMIKUS: increment + claimedDate egyszerre
+      tx.set(
+        ref,
+        {
+          'xp': FieldValue.increment(_dailyClaimXp),
+          'level': FieldValue.increment(0), // később újraszámoljuk
+          'claimedDate': today,
+          'streakDays': newStreak,
+          'lastOpenDate': today,
+        },
+        SetOptions(merge: true),
+      );
+    });
+
+    if (!mounted) return;
+
+    if (gained == 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('A mai jutalmat már felvetted.')),
+      );
+      return;
+    }
+
+    _showXpGain(gained);
+    await _refreshDailyMetrics(uid);
+  } finally {
+    if (mounted) setState(() => _claimingDaily = false);
   }
+}
+
 
   Future<void> _markPostedTodayAndReward(String uid) async {
     try {
@@ -1447,3 +1450,4 @@ class _DailyMetrics {
     this.postedToday = false,
   });
 }
+
