@@ -1,21 +1,17 @@
 // lib/screens/weather_screen.dart
 //
-// Egyetlen fájlba rendezve:
-// - WeatherService (WeatherAPI.com)
+// Egyetlen fájlba rendezve (FRISSÍTVE):
+// - WeatherService (WeatherAPI.com) + település-keresés (fetchWeatherByQuery)
 // - Modellek (WeatherResponse + almodellek, toJson)
 // - getCurrentLocation()
-// - WeatherViewModel (60 perces SharedPreferences cache + force frissítés opció)
-// - Premium WeatherScreen (Kapási ablak Top3 + grafikonok + Meteo Map + saját Canvas heatmap)
-// - Meteo map sampler: erős API-védelem
-//    * coord+hour cache (memória)
-//    * bounds-alapú újratöltés csak onCameraIdle + debounce
-//    * requestId védelem
-//    * MIN API interval (rate limit) – nem engedi túl sűrűn hívni a WeatherAPI-t
+// - WeatherViewModel (60 perces SharedPreferences cache) + cacheKey GPS/település szerint
+// - WeatherScreen: kereső településre (város alapján frissít)
+// - Heatmap / meteo térkép: IDEIGLENESEN KIVÉVE A MEGJELENÍTÉSBŐL (UI-ból)
 //
 // Fontos: add a pubspec.yaml-hoz:
 //   google_maps_flutter, geolocator, http, provider, fl_chart, shared_preferences
 //
-// Megjegyzés: A WeatherAPI kulcsodat itt hagytam, ahogy küldted.
+// Megjegyzés: A WeatherAPI kulcsot változatlanul hagytam.
 
 import 'dart:async';
 import 'dart:convert';
@@ -25,7 +21,6 @@ import 'dart:ui' as ui;
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -48,6 +43,25 @@ class WeatherService {
     final response = await http.get(uri);
     if (response.statusCode != 200) {
       throw Exception('Failed to load weather data (${response.statusCode})');
+    }
+
+    final Map<String, dynamic> jsonMap = jsonDecode(response.body);
+    return WeatherResponse.fromJson(jsonMap);
+  }
+
+  /// ÚJ: település / keresőkifejezés alapú lekérés
+  /// Példák: "Budapest", "Jászberény", "Szeged", "Győr"
+  Future<WeatherResponse> fetchWeatherByQuery({
+    required String query,
+  }) async {
+    final q = Uri.encodeComponent(query.trim());
+    final uri = Uri.parse(
+      '$_baseUrl?key=$_apiKey&q=$q&days=3&aqi=no&alerts=no',
+    );
+
+    final response = await http.get(uri);
+    if (response.statusCode != 200) {
+      throw Exception('Nem található település / hiba (${response.statusCode})');
     }
 
     final Map<String, dynamic> jsonMap = jsonDecode(response.body);
@@ -96,10 +110,10 @@ class WeatherResponse {
   }
 
   Map<String, dynamic> toJson() => {
-    'location': location.toJson(),
-    'current': current.toJson(),
-    'forecast': forecast.toJson(),
-  };
+        'location': location.toJson(),
+        'current': current.toJson(),
+        'forecast': forecast.toJson(),
+      };
 }
 
 class LocationData {
@@ -122,24 +136,24 @@ class LocationData {
   });
 
   factory LocationData.fromJson(Map<String, dynamic> json) => LocationData(
-    name: (json['name'] ?? '') as String,
-    region: (json['region'] ?? '') as String,
-    country: (json['country'] ?? '') as String,
-    lat: (json['lat'] as num).toDouble(),
-    lon: (json['lon'] as num).toDouble(),
-    tzId: (json['tz_id'] ?? '') as String,
-    localtime: (json['localtime'] ?? '') as String,
-  );
+        name: (json['name'] ?? '') as String,
+        region: (json['region'] ?? '') as String,
+        country: (json['country'] ?? '') as String,
+        lat: (json['lat'] as num).toDouble(),
+        lon: (json['lon'] as num).toDouble(),
+        tzId: (json['tz_id'] ?? '') as String,
+        localtime: (json['localtime'] ?? '') as String,
+      );
 
   Map<String, dynamic> toJson() => {
-    'name': name,
-    'region': region,
-    'country': country,
-    'lat': lat,
-    'lon': lon,
-    'tz_id': tzId,
-    'localtime': localtime,
-  };
+        'name': name,
+        'region': region,
+        'country': country,
+        'lat': lat,
+        'lon': lon,
+        'tz_id': tzId,
+        'localtime': localtime,
+      };
 }
 
 class CurrentWeather {
@@ -191,21 +205,21 @@ class CurrentWeather {
   }
 
   Map<String, dynamic> toJson() => {
-    'last_updated': lastUpdated,
-    'temp_c': tempC,
-    'feelslike_c': feelslikeC,
-    'humidity': humidity,
-    'wind_kph': windKph,
-    'wind_dir': windDir,
-    'pressure_mb': pressureMb,
-    'vis_km': visKm,
-    'precip_mm': precipMm,
-    'uv': uv,
-    'condition': {
-      'text': conditionText,
-      'icon': iconUrl.replaceFirst('https:', ''),
-    },
-  };
+        'last_updated': lastUpdated,
+        'temp_c': tempC,
+        'feelslike_c': feelslikeC,
+        'humidity': humidity,
+        'wind_kph': windKph,
+        'wind_dir': windDir,
+        'pressure_mb': pressureMb,
+        'vis_km': visKm,
+        'precip_mm': precipMm,
+        'uv': uv,
+        'condition': {
+          'text': conditionText,
+          'icon': iconUrl.replaceFirst('https:', ''),
+        },
+      };
 }
 
 class ForecastData {
@@ -221,8 +235,8 @@ class ForecastData {
   }
 
   Map<String, dynamic> toJson() => {
-    'forecastday': forecastday.map((d) => d.toJson()).toList(),
-  };
+        'forecastday': forecastday.map((d) => d.toJson()).toList(),
+      };
 }
 
 class AstroData {
@@ -232,9 +246,9 @@ class AstroData {
   AstroData({required this.sunrise, required this.sunset});
 
   factory AstroData.fromJson(Map<String, dynamic> json) => AstroData(
-    sunrise: (json['sunrise'] ?? '') as String,
-    sunset: (json['sunset'] ?? '') as String,
-  );
+        sunrise: (json['sunrise'] ?? '') as String,
+        sunset: (json['sunset'] ?? '') as String,
+      );
 
   Map<String, dynamic> toJson() => {'sunrise': sunrise, 'sunset': sunset};
 }
@@ -275,15 +289,15 @@ class HourData {
   }
 
   Map<String, dynamic> toJson() => {
-    'time': time,
-    'temp_c': tempC,
-    'condition': {'icon': conditionIcon},
-    'humidity': humidity,
-    'chance_of_rain': chanceOfRain,
-    'pressure_mb': pressureMb,
-    'wind_kph': windKph,
-    'wind_dir': windDir,
-  };
+        'time': time,
+        'temp_c': tempC,
+        'condition': {'icon': conditionIcon},
+        'humidity': humidity,
+        'chance_of_rain': chanceOfRain,
+        'pressure_mb': pressureMb,
+        'wind_kph': windKph,
+        'wind_dir': windDir,
+      };
 }
 
 class DayData {
@@ -316,13 +330,13 @@ class DayData {
   }
 
   Map<String, dynamic> toJson() => {
-    'maxtemp_c': maxTempC,
-    'mintemp_c': minTempC,
-    'daily_chance_of_rain': dailyChanceOfRain,
-    'totalprecip_mm': totalPrecipMm,
-    'uv': uv,
-    'condition': {'text': conditionText},
-  };
+        'maxtemp_c': maxTempC,
+        'mintemp_c': minTempC,
+        'daily_chance_of_rain': dailyChanceOfRain,
+        'totalprecip_mm': totalPrecipMm,
+        'uv': uv,
+        'condition': {'text': conditionText},
+      };
 }
 
 class ForecastDay {
@@ -339,24 +353,24 @@ class ForecastDay {
   });
 
   factory ForecastDay.fromJson(Map<String, dynamic> json) => ForecastDay(
-    date: (json['date'] ?? '') as String,
-    day: DayData.fromJson(json['day'] as Map<String, dynamic>),
-    astro: AstroData.fromJson(json['astro'] as Map<String, dynamic>),
-    hour: (json['hour'] as List<dynamic>? ?? const [])
-        .map((e) => HourData.fromJson(e as Map<String, dynamic>))
-        .toList(),
-  );
+        date: (json['date'] ?? '') as String,
+        day: DayData.fromJson(json['day'] as Map<String, dynamic>),
+        astro: AstroData.fromJson(json['astro'] as Map<String, dynamic>),
+        hour: (json['hour'] as List<dynamic>? ?? const [])
+            .map((e) => HourData.fromJson(e as Map<String, dynamic>))
+            .toList(),
+      );
 
   Map<String, dynamic> toJson() => {
-    'date': date,
-    'day': day.toJson(),
-    'astro': astro.toJson(),
-    'hour': hour.map((h) => h.toJson()).toList(),
-  };
+        'date': date,
+        'day': day.toJson(),
+        'astro': astro.toJson(),
+        'hour': hour.map((h) => h.toJson()).toList(),
+      };
 }
 
 /// ─────────────────────────────────────────────────────────────────────────────
-/// ViewModel: 60 perces cache (SharedPreferences)
+/// ViewModel: 60 perces cache (SharedPreferences) – GPS és település szerint kulcsolva
 /// ─────────────────────────────────────────────────────────────────────────────
 class WeatherViewModel extends ChangeNotifier {
   final WeatherService _weatherService;
@@ -366,14 +380,45 @@ class WeatherViewModel extends ChangeNotifier {
   String error = '';
   DateTime? lastLoadedAt;
 
+  String activeQueryLabel = 'Helyalapú';
+
   WeatherViewModel({WeatherService? service}) : _weatherService = service ?? WeatherService();
 
-  /// 60 perces cache: ugyanarra a koordinátára (és általánosan) elég stabil.
-  Future<void> loadWeather(
-      double lat,
-      double lon, {
-        bool force = false,
-      }) async {
+  static const int _cacheMinutes = 60;
+
+  Future<void> loadWeatherByGps(
+    double lat,
+    double lon, {
+    bool force = false,
+  }) async {
+    final key = 'gps:${lat.toStringAsFixed(3)},${lon.toStringAsFixed(3)}';
+    activeQueryLabel = 'Helyalapú';
+    await _loadInternal(
+      force: force,
+      cacheKey: key,
+      fetcher: () => _weatherService.fetchCurrentWeather(lat: lat, lon: lon),
+    );
+  }
+
+  Future<void> loadWeatherByCity(
+    String city, {
+    bool force = false,
+  }) async {
+    final normalized = city.trim();
+    final key = 'q:${normalized.toLowerCase()}';
+    activeQueryLabel = normalized;
+    await _loadInternal(
+      force: force,
+      cacheKey: key,
+      fetcher: () => _weatherService.fetchWeatherByQuery(query: normalized),
+    );
+  }
+
+  Future<void> _loadInternal({
+    required bool force,
+    required String cacheKey,
+    required Future<WeatherResponse> Function() fetcher,
+  }) async {
     isLoading = true;
     error = '';
     notifyListeners();
@@ -382,14 +427,14 @@ class WeatherViewModel extends ChangeNotifier {
       final prefs = await SharedPreferences.getInstance();
       final now = DateTime.now();
 
-      final lastUpdateString = prefs.getString('weather_last_update');
-      final weatherJsonString = prefs.getString('weather_data');
+      final lastUpdateString = prefs.getString('weather_last_update_$cacheKey');
+      final weatherJsonString = prefs.getString('weather_data_$cacheKey');
 
       var shouldFetch = true;
 
       if (!force && lastUpdateString != null && weatherJsonString != null) {
         final lastUpdate = DateTime.tryParse(lastUpdateString);
-        if (lastUpdate != null && now.difference(lastUpdate).inMinutes < 60) {
+        if (lastUpdate != null && now.difference(lastUpdate).inMinutes < _cacheMinutes) {
           final Map<String, dynamic> jsonMap = jsonDecode(weatherJsonString);
           weather = WeatherResponse.fromJson(jsonMap);
           shouldFetch = false;
@@ -397,12 +442,12 @@ class WeatherViewModel extends ChangeNotifier {
       }
 
       if (shouldFetch) {
-        final fetched = await _weatherService.fetchCurrentWeather(lat: lat, lon: lon);
+        final fetched = await fetcher();
         weather = fetched;
 
         final encoded = jsonEncode(fetched.toJson());
-        await prefs.setString('weather_data', encoded);
-        await prefs.setString('weather_last_update', now.toIso8601String());
+        await prefs.setString('weather_data_$cacheKey', encoded);
+        await prefs.setString('weather_last_update_$cacheKey', now.toIso8601String());
       }
 
       lastLoadedAt = DateTime.now();
@@ -437,294 +482,7 @@ class _FishingWindow {
 }
 
 /// ─────────────────────────────────────────────────────────────────────────────
-/// Meteo Map: sampling + painter + sampler (API-védelmekkel)
-/// ─────────────────────────────────────────────────────────────────────────────
-
-enum _FieldType { rainChance, pressureMb, biteIndex }
-
-class _SamplePoint {
-  final LatLng latLng;
-  final double value01; // 0..1 (normalized)
-  const _SamplePoint(this.latLng, this.value01);
-}
-
-class _ScreenSample {
-  final Offset p;
-  final double v01;
-  const _ScreenSample(this.p, this.v01);
-}
-
-Color _heatColor(double t, {double alpha = 0.55}) {
-  t = t.clamp(0.0, 1.0);
-  Color lerp(Color a, Color b, double x) => Color.lerp(a, b, x)!;
-
-  const c0 = Color(0xFF2A6FFF);
-  const c1 = Color(0xFF19C37D);
-  const c2 = Color(0xFFFFC043);
-  const c3 = Color(0xFFFF4D4D);
-
-  final Color c;
-  if (t < 0.33) {
-    c = lerp(c0, c1, t / 0.33);
-  } else if (t < 0.66) {
-    c = lerp(c1, c2, (t - 0.33) / 0.33);
-  } else {
-    c = lerp(c2, c3, (t - 0.66) / 0.34);
-  }
-  return c.withOpacity(alpha);
-}
-
-class _ScreenHeatPainter extends CustomPainter {
-  final List<_ScreenSample> samples;
-  final double radiusPx;
-  final double intensity;
-
-  const _ScreenHeatPainter({
-    required this.samples,
-    required this.radiusPx,
-    required this.intensity,
-  });
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    if (samples.isEmpty) return;
-
-    final r = radiusPx.clamp(10.0, 120.0);
-    final k = intensity.clamp(0.2, 1.6);
-
-    final paint = Paint()
-      ..isAntiAlias = true
-      ..blendMode = BlendMode.plus;
-
-    final cull = Rect.fromLTWH(-r, -r, size.width + 2 * r, size.height + 2 * r);
-
-    for (final s in samples) {
-      if (!cull.contains(s.p)) continue;
-
-      final t = (s.v01 * k).clamp(0.0, 1.0);
-      final base = _heatColor(t, alpha: (0.12 + 0.22 * t).clamp(0.0, 0.46));
-
-      paint.shader = ui.Gradient.radial(
-        s.p,
-        r,
-        [base, base.withOpacity(base.opacity * 0.45), base.withOpacity(0.0)],
-        const [0.0, 0.55, 1.0],
-      );
-
-      canvas.drawCircle(s.p, r, paint);
-    }
-
-    paint.shader = null;
-  }
-
-  @override
-  bool shouldRepaint(covariant _ScreenHeatPainter oldDelegate) {
-    return oldDelegate.samples != samples ||
-        oldDelegate.radiusPx != radiusPx ||
-        oldDelegate.intensity != intensity;
-  }
-}
-
-class _GridCellResult {
-  final LatLng latLng;
-  final WeatherResponse weather;
-  const _GridCellResult(this.latLng, this.weather);
-}
-
-/// Erősített sampler:
-/// - cache key: rounded lat/lon + hourIndex
-/// - rate limit: minimum idő két API hívás között (globálisan)
-/// - concurrency batching: max 6 párhuzamos kérés
-class _WeatherGridSampler {
-  final WeatherService service;
-
-  // k: "lat:lon:hX" -> cached response
-  final Map<String, WeatherResponse> _cache = {};
-  final List<String> _cacheOrder = []; // egyszerű LRU-szerű kiszórás
-  final int _maxCache = 250;
-
-  // Globális rate limit: ennyinél sűrűbben NEM hívunk API-t.
-  final Duration minApiInterval;
-
-  DateTime? _lastApiCallAt;
-
-  _WeatherGridSampler({
-    required this.service,
-    this.minApiInterval = const Duration(milliseconds: 650),
-  });
-
-  Future<List<_SamplePoint>> loadFieldPoints({
-    required LatLngBounds bounds,
-    required int gridN,
-    required int hourIndex,
-    required _FieldType field,
-  }) async {
-    final pts = _gridPoints(bounds, gridN);
-
-    const concurrency = 6;
-    final results = <_GridCellResult>[];
-
-    int i = 0;
-    while (i < pts.length) {
-      final batch = pts.skip(i).take(concurrency).toList();
-      final batchRes = await Future.wait(batch.map((p) => _fetchAt(p, hourIndex)));
-      results.addAll(batchRes);
-      i += concurrency;
-    }
-
-    final rawValues = results
-        .map((r) => _extractFieldValue(r.weather, hourIndex, field))
-        .toList();
-
-    final minV = rawValues.reduce(min);
-    final maxV = rawValues.reduce(max);
-
-    double norm(double v) {
-      if ((maxV - minV).abs() < 1e-9) return 0;
-      return ((v - minV) / (maxV - minV)).clamp(0.0, 1.0);
-    }
-
-    return List.generate(
-      results.length,
-          (idx) => _SamplePoint(results[idx].latLng, norm(rawValues[idx])),
-    );
-  }
-
-  List<LatLng> _gridPoints(LatLngBounds b, int n) {
-    final sw = b.southwest;
-    final ne = b.northeast;
-
-    double lerp(double a, double bb, double t) => a + (bb - a) * t;
-
-    final out = <LatLng>[];
-    for (int y = 0; y < n; y++) {
-      final ty = n == 1 ? 0.5 : y / (n - 1);
-      final lat = lerp(sw.latitude, ne.latitude, ty);
-      for (int x = 0; x < n; x++) {
-        final tx = n == 1 ? 0.5 : x / (n - 1);
-        final lon = lerp(sw.longitude, ne.longitude, tx);
-        out.add(LatLng(lat, lon));
-      }
-    }
-    return out;
-  }
-
-  String _key(LatLng p, int hourIndex) {
-    // 3 decimals ~ 100-1000m bucket (jó kompromisszum API terheléshez)
-    String r(double v) => v.toStringAsFixed(3);
-    return '${r(p.latitude)}:${r(p.longitude)}:h$hourIndex';
-  }
-
-  Future<_GridCellResult> _fetchAt(LatLng p, int hourIndex) async {
-    final k = _key(p, hourIndex);
-    final cached = _cache[k];
-    if (cached != null) return _GridCellResult(p, cached);
-
-    // Rate limit (globális): óvja a WeatherAPI-t
-    final now = DateTime.now();
-    final last = _lastApiCallAt;
-    if (last != null) {
-      final diff = now.difference(last);
-      if (diff < minApiInterval) {
-        await Future.delayed(minApiInterval - diff);
-      }
-    }
-
-    _lastApiCallAt = DateTime.now();
-    final w = await service.fetchCurrentWeather(lat: p.latitude, lon: p.longitude);
-
-    _cache[k] = w;
-    _cacheOrder.add(k);
-    if (_cacheOrder.length > _maxCache) {
-      final rm = _cacheOrder.removeAt(0);
-      _cache.remove(rm);
-    }
-
-    return _GridCellResult(p, w);
-  }
-
-  double _extractFieldValue(WeatherResponse w, int hourIndex, _FieldType field) {
-    final hours = w.forecast.forecastday.first.hour;
-    final idx = hourIndex
-        .clamp(0, max(0, hours.length - 1))
-        .toInt();
-
-    final h = hours[idx];
-
-    switch (field) {
-      case _FieldType.rainChance:
-        return h.chanceOfRain.toDouble(); // 0..100
-      case _FieldType.pressureMb:
-        return h.pressureMb; // mb
-      case _FieldType.biteIndex:
-      // heurisztika: alacsony eső + current nyomáshoz közeli + temp sáv
-        final rain = h.chanceOfRain.toDouble();
-        final p = h.pressureMb;
-        final temp = h.tempC;
-
-        final currentP = w.current.pressureMb;
-        final pDelta = (p - currentP).abs();
-
-        final rainScore = (1.0 - (rain / 100.0)).clamp(0.0, 1.0);
-        final pScore = (1.0 - (pDelta / 4.0)).clamp(0.0, 1.0);
-        final tempScore = (temp >= 10 && temp <= 24)
-            ? 1.0
-            : (temp < 10 ? (temp / 10.0) : (1.0 - ((temp - 24.0) / 10.0))).clamp(0.0, 1.0);
-
-        return (0.45 * rainScore) + (0.35 * pScore) + (0.20 * tempScore); // 0..1
-    }
-  }
-}
-
-/// ─────────────────────────────────────────────────────────────────────────────
-/// Lightweight loading badge
-/// ─────────────────────────────────────────────────────────────────────────────
-class _LightLoadingBadge extends StatelessWidget {
-  final double height;
-  final double width;
-  final BorderRadius borderRadius;
-
-  const _LightLoadingBadge({
-    this.height = 44,
-    this.width = 160,
-    this.borderRadius = const BorderRadius.all(Radius.circular(999)),
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      height: height,
-      width: width,
-      decoration: BoxDecoration(
-        color: Colors.black.withOpacity(0.55),
-        borderRadius: borderRadius,
-        border: Border.all(color: Colors.white.withOpacity(0.12)),
-      ),
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      child: const Row(
-        children: [
-          SizedBox(
-            width: 18,
-            height: 18,
-            child: CircularProgressIndicator(strokeWidth: 2),
-          ),
-          SizedBox(width: 10),
-          Expanded(
-            child: Text(
-              'Betöltés...',
-              style: TextStyle(color: Colors.white, fontWeight: FontWeight.w800),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-/// ─────────────────────────────────────────────────────────────────────────────
-/// WeatherScreen (Premium)
+/// WeatherScreen (Premium) – keresővel, heatmap UI nélkül
 /// ─────────────────────────────────────────────────────────────────────────────
 class WeatherScreen extends StatefulWidget {
   const WeatherScreen({super.key});
@@ -758,35 +516,9 @@ class _WeatherScreenState extends State<WeatherScreen> with TickerProviderStateM
     duration: const Duration(milliseconds: 1600),
   )..repeat(reverse: true);
 
-  // ── Meteo map state
-  final _WeatherGridSampler _sampler = _WeatherGridSampler(
-    service: WeatherService(),
-    // Ezzel még óvatosabb: ha nagyon kell, csökkentsd 450ms környékére,
-    // de 650ms-800ms biztonságosabb.
-    minApiInterval: const Duration(milliseconds: 750),
-  );
-
-  GoogleMapController? _mapCtrl;
-  Timer? _mapDebounce;
-
-  bool _mapLoading = false;
-  String _mapError = '';
-
-  int _mapHourIndex = 0;
-
-  // erőforrás-barát default: 5 (25 cella)
-  int _mapGridN = 5; // 4..8 ajánlott
-  double _mapRadiusPx = 54;
-  double _mapIntensity = 1.0;
-  _FieldType _mapField = _FieldType.rainChance;
-
-  List<_SamplePoint> _mapFieldPoints = const [];
-  List<_ScreenSample> _mapScreenSamples = const [];
-  Set<Polygon> _mapPolygons = {};
-  Set<Polyline> _mapPolylines = {};
-
-  // RequestId védelem
-  int _mapReqId = 0;
+  // KERESŐ
+  final TextEditingController _cityCtrl = TextEditingController();
+  String? _lastCityQuery;
 
   @override
   void initState() {
@@ -802,7 +534,7 @@ class _WeatherScreenState extends State<WeatherScreen> with TickerProviderStateM
     _fadeCtrl.dispose();
     _pulseCtrl.dispose();
     _scrollY.dispose();
-    _mapDebounce?.cancel();
+    _cityCtrl.dispose();
     viewModel.dispose();
     super.dispose();
   }
@@ -822,16 +554,7 @@ class _WeatherScreenState extends State<WeatherScreen> with TickerProviderStateM
     if (!mounted) return;
 
     if (pos != null) {
-      // időjárás cache-elve (60 perc), force nélkül nem spammel
-      await viewModel.loadWeather(pos.latitude, pos.longitude, force: false);
-
-      // map: csak ha már létrejött a controller
-      if (_mapCtrl != null) {
-        await _mapCtrl!.animateCamera(
-          CameraUpdate.newLatLngZoom(LatLng(pos.latitude, pos.longitude), 9.5),
-        );
-        _scheduleMapReload();
-      }
+      await viewModel.loadWeatherByGps(pos.latitude, pos.longitude, force: false);
     } else {
       viewModel
         ..error = 'Nem sikerült lekérni a helyadatokat.'
@@ -840,7 +563,15 @@ class _WeatherScreenState extends State<WeatherScreen> with TickerProviderStateM
     }
   }
 
-  // ----------------- Safe accessor (ha valaha Map/dynamic lenne) -----------------
+  Future<void> _searchCityAndLoad(String raw) async {
+    final q = raw.trim();
+    if (q.isEmpty) return;
+    _lastCityQuery = q;
+    await viewModel.loadWeatherByCity(q, force: true);
+    if (mounted) FocusScope.of(context).unfocus();
+  }
+
+  // ----------------- Safe accessor -----------------
   double _hourTempC(HourData h) => h.tempC;
   double _hourPressureMb(HourData h) => h.pressureMb;
   double _hourWindKph(HourData h) => h.windKph;
@@ -848,7 +579,6 @@ class _WeatherScreenState extends State<WeatherScreen> with TickerProviderStateM
   int _hourHumidity(HourData h) => h.humidity;
   int _hourChanceOfRain(HourData h) => h.chanceOfRain;
   String _hourTime(HourData h) => h.time;
-  String _hourConditionIcon(HourData h) => h.conditionIcon;
 
   // ----------------- Formatting helpers -----------------
   String _displayCity(String raw) {
@@ -1104,11 +834,11 @@ class _WeatherScreenState extends State<WeatherScreen> with TickerProviderStateM
 
   // ----------------- Glass surface -----------------
   Widget _glassSurface(
-      BuildContext context, {
-        required Widget child,
-        EdgeInsets? padding,
-        BorderRadius? radius,
-      }) {
+    BuildContext context, {
+    required Widget child,
+    EdgeInsets? padding,
+    BorderRadius? radius,
+  }) {
     final scheme = Theme.of(context).colorScheme;
     final r = radius ?? BorderRadius.circular(24);
 
@@ -1137,11 +867,11 @@ class _WeatherScreenState extends State<WeatherScreen> with TickerProviderStateM
   }
 
   Widget _sectionTitle(
-      BuildContext context, {
-        required String title,
-        String? subtitle,
-        Widget? trailing,
-      }) {
+    BuildContext context, {
+    required String title,
+    String? subtitle,
+    Widget? trailing,
+  }) {
     final t = Theme.of(context).textTheme;
     final scheme = Theme.of(context).colorScheme;
 
@@ -1204,11 +934,11 @@ class _WeatherScreenState extends State<WeatherScreen> with TickerProviderStateM
   }
 
   Widget _metricCard(
-      BuildContext context, {
-        required IconData icon,
-        required String label,
-        required String value,
-      }) {
+    BuildContext context, {
+    required IconData icon,
+    required String label,
+    required String value,
+  }) {
     final scheme = Theme.of(context).colorScheme;
     final t = Theme.of(context).textTheme;
 
@@ -1311,7 +1041,7 @@ class _WeatherScreenState extends State<WeatherScreen> with TickerProviderStateM
                     runSpacing: 8,
                     children: [
                       _pill(context, icon: Icons.schedule, text: 'Frissítve: $lastStr'),
-                      _pill(context, icon: Icons.my_location, text: 'Helyalapú'),
+                      _pill(context, icon: Icons.place_outlined, text: viewModel.activeQueryLabel),
                     ],
                   ),
                 ],
@@ -1320,16 +1050,68 @@ class _WeatherScreenState extends State<WeatherScreen> with TickerProviderStateM
             IconButton(
               tooltip: 'Frissítés (force)',
               onPressed: () async {
+                // Ha volt utolsó település-keresés, akkor azt frissítjük
+                if ((_lastCityQuery ?? '').trim().isNotEmpty) {
+                  await viewModel.loadWeatherByCity(_lastCityQuery!, force: true);
+                  return;
+                }
+
+                // különben GPS
                 final pos = await getCurrentLocation();
                 if (pos != null) {
-                  await viewModel.loadWeather(pos.latitude, pos.longitude, force: true);
-                  if (_mapCtrl != null) _scheduleMapReload();
+                  await viewModel.loadWeatherByGps(pos.latitude, pos.longitude, force: true);
                 }
               },
               icon: const Icon(Icons.refresh),
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _citySearchBar(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+
+    return _glassSurface(
+      context,
+      radius: BorderRadius.circular(22),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      child: Row(
+        children: [
+          Icon(Icons.search, color: scheme.onSurfaceVariant),
+          const SizedBox(width: 10),
+          Expanded(
+            child: TextField(
+              controller: _cityCtrl,
+              textInputAction: TextInputAction.search,
+              decoration: InputDecoration(
+                hintText: 'Keress településre (pl. Budapest, Jászberény)',
+                border: InputBorder.none,
+                isDense: true,
+                hintStyle: TextStyle(color: scheme.onSurfaceVariant.withOpacity(0.9)),
+              ),
+              onSubmitted: _searchCityAndLoad,
+            ),
+          ),
+          const SizedBox(width: 8),
+          IconButton(
+            tooltip: 'Keresés',
+            onPressed: () => _searchCityAndLoad(_cityCtrl.text),
+            icon: const Icon(Icons.arrow_forward),
+          ),
+          IconButton(
+            tooltip: 'Vissza helyalapúra',
+            onPressed: () async {
+              _lastCityQuery = null;
+              final pos = await getCurrentLocation();
+              if (pos != null) {
+                await viewModel.loadWeatherByGps(pos.latitude, pos.longitude, force: true);
+              }
+            },
+            icon: const Icon(Icons.my_location),
+          ),
+        ],
       ),
     );
   }
@@ -1417,32 +1199,32 @@ class _WeatherScreenState extends State<WeatherScreen> with TickerProviderStateM
   // ----------------- Loading/empty/error -----------------
   Widget _skeleton(BuildContext context) {
     Widget bar({double? w, double h = 14}) => Container(
-      width: w,
-      height: h,
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.35),
-        borderRadius: BorderRadius.circular(999),
-      ),
-    );
+          width: w,
+          height: h,
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.35),
+            borderRadius: BorderRadius.circular(999),
+          ),
+        );
 
     Widget card({double h = 110}) => _glassSurface(
-      context,
-      padding: const EdgeInsets.all(16),
-      radius: BorderRadius.circular(24),
-      child: SizedBox(
-        height: h,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            bar(w: 160),
-            const SizedBox(height: 10),
-            bar(w: 220),
-            const Spacer(),
-            bar(w: 120),
-          ],
-        ),
-      ),
-    );
+          context,
+          padding: const EdgeInsets.all(16),
+          radius: BorderRadius.circular(24),
+          child: SizedBox(
+            height: h,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                bar(w: 160),
+                const SizedBox(height: 10),
+                bar(w: 220),
+                const Spacer(),
+                bar(w: 120),
+              ],
+            ),
+          ),
+        );
 
     return SingleChildScrollView(
       physics: const AlwaysScrollableScrollPhysics(),
@@ -1523,271 +1305,6 @@ class _WeatherScreenState extends State<WeatherScreen> with TickerProviderStateM
             FilledButton.icon(onPressed: _loadLocationAndWeather, icon: const Icon(Icons.refresh), label: const Text('Frissítés')),
           ],
         ),
-      ),
-    );
-  }
-
-  // ----------------- Meteo map overlay integration -----------------
-  void _scheduleMapReload() {
-    _mapDebounce?.cancel();
-    _mapDebounce = Timer(const Duration(milliseconds: 450), _reloadMapField);
-  }
-
-  String _fieldLabel(_FieldType f) {
-    switch (f) {
-      case _FieldType.rainChance:
-        return 'Eső esély';
-      case _FieldType.pressureMb:
-        return 'Nyomás';
-      case _FieldType.biteIndex:
-        return 'Kapási index';
-    }
-  }
-
-  Future<List<_ScreenSample>> _toScreenSamples(
-      BuildContext context,
-      GoogleMapController ctrl,
-      List<_SamplePoint> pts,
-      ) async {
-    // Androidon gyakran "physical px" jön: korrigáljuk DPR-rel.
-    final dpr = MediaQuery.of(context).devicePixelRatio;
-
-    final scs = await Future.wait(pts.map((sp) async {
-      final sc = await ctrl.getScreenCoordinate(sp.latLng);
-      final dx = sc.x.toDouble() / dpr;
-      final dy = sc.y.toDouble() / dpr;
-      return _ScreenSample(Offset(dx, dy), sp.value01);
-    }));
-
-    return scs;
-  }
-
-  Future<void> _reloadMapField() async {
-    final ctrl = _mapCtrl;
-    if (ctrl == null) return;
-
-    // Ne kérjen túl messziről (opcionális védelem)
-    final zoom = await ctrl.getZoomLevel();
-    if (zoom < 8.3) {
-      if (!mounted) return;
-      setState(() => _mapScreenSamples = const []);
-      return;
-    }
-
-    final int reqId = ++_mapReqId;
-
-    setState(() {
-      _mapLoading = true;
-      _mapError = '';
-    });
-
-    try {
-      final bounds = await ctrl.getVisibleRegion();
-      if (!mounted || reqId != _mapReqId) return;
-
-      final now = DateTime.now().toLocal();
-      _mapHourIndex = now.hour.clamp(0, 23);
-
-      final pts = await _sampler.loadFieldPoints(
-        bounds: bounds,
-        gridN: _mapGridN,
-        hourIndex: _mapHourIndex,
-        field: _mapField,
-      );
-      if (!mounted || reqId != _mapReqId) return;
-
-      final screen = await _toScreenSamples(context, ctrl, pts);
-      if (!mounted || reqId != _mapReqId) return;
-
-      final demo = _buildMapDemoZones(bounds);
-
-      if (!mounted || reqId != _mapReqId) return;
-      setState(() {
-        _mapFieldPoints = pts;
-        _mapScreenSamples = screen;
-        _mapPolygons = demo.$1;
-        _mapPolylines = demo.$2;
-        _mapLoading = false;
-      });
-    } catch (e) {
-      if (!mounted || reqId != _mapReqId) return;
-      setState(() {
-        _mapError = e.toString();
-        _mapLoading = false;
-      });
-    }
-  }
-
-  (Set<Polygon>, Set<Polyline>) _buildMapDemoZones(LatLngBounds b) {
-    final sw = b.southwest;
-    final ne = b.northeast;
-    final midLat = (sw.latitude + ne.latitude) / 2;
-
-    final line = Polyline(
-      polylineId: const PolylineId('front'),
-      color: Colors.orange.withOpacity(0.75),
-      width: 4,
-      points: [
-        LatLng(midLat, sw.longitude),
-        LatLng(midLat, ne.longitude),
-      ],
-    );
-
-    final baseColor = _mapField == _FieldType.rainChance
-        ? Colors.blue
-        : (_mapField == _FieldType.pressureMb ? Colors.purple : Colors.green);
-
-    final poly = Polygon(
-      polygonId: const PolygonId('zone'),
-      fillColor: baseColor.withOpacity(0.10),
-      strokeColor: baseColor.withOpacity(0.40),
-      strokeWidth: 2,
-      points: [
-        LatLng(ne.latitude, sw.longitude),
-        LatLng(ne.latitude, ne.longitude),
-        LatLng(midLat, ne.longitude),
-        LatLng(midLat, sw.longitude),
-      ],
-    );
-
-    return ({poly}, {line});
-  }
-
-  Widget _meteoMapSection(BuildContext context, WeatherResponse w) {
-    final scheme = Theme.of(context).colorScheme;
-
-    final center = LatLng(w.location.lat, w.location.lon);
-
-    return _glassSurface(
-      context,
-      radius: BorderRadius.circular(26),
-      padding: const EdgeInsets.fromLTRB(14, 14, 14, 14),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                width: 42,
-                height: 42,
-                decoration: BoxDecoration(
-                  color: scheme.primary.withOpacity(0.12),
-                  borderRadius: BorderRadius.circular(14),
-                ),
-                child: Icon(Icons.public, color: scheme.primary),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Meteo térkép',
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w900),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      'Heatmap overlay • ${_fieldLabel(_mapField)} • grid=$_mapGridN',
-                      style: TextStyle(
-                        color: scheme.onSurfaceVariant,
-                        fontWeight: FontWeight.w700,
-                        height: 1.1,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              IconButton(
-                onPressed: _scheduleMapReload,
-                tooltip: 'Frissítés',
-                icon: const Icon(Icons.refresh),
-              ),
-            ],
-          ),
-          const SizedBox(height: 10),
-
-          // Minimal, de biztonságos beállító sor (nem spammel: slider csak "végen" töltene,
-          // itt most fix értékekkel hagytam; ha kérsz, teszek bele onChangeEnd-es slidert.)
-          Wrap(
-            spacing: 10,
-            runSpacing: 10,
-            children: [
-              _pill(context, icon: Icons.access_time, text: 'Óra: $_mapHourIndex'),
-              _pill(context, icon: Icons.grid_on, text: 'Grid: $_mapGridN'),
-              _pill(context, icon: Icons.local_fire_department, text: 'Int: ${_mapIntensity.toStringAsFixed(2)}'),
-            ],
-          ),
-
-          const SizedBox(height: 12),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(20),
-            child: SizedBox(
-              height: 320,
-              child: Stack(
-                children: [
-                  GoogleMap(
-                    initialCameraPosition: CameraPosition(target: center, zoom: 9.5),
-                    myLocationEnabled: true,
-                    myLocationButtonEnabled: true,
-                    polygons: _mapPolygons,
-                    polylines: _mapPolylines,
-                    onMapCreated: (c) {
-                      _mapCtrl = c;
-                      _scheduleMapReload();
-                    },
-                    // Fontos: NE töltsünk mozgás közben
-                    onCameraMove: (_) {},
-                    // Csak megállás után
-                    onCameraIdle: _scheduleMapReload,
-                  ),
-
-                  // Heat overlay
-                  Positioned.fill(
-                    child: IgnorePointer(
-                      child: RepaintBoundary(
-                        child: CustomPaint(
-                          painter: _ScreenHeatPainter(
-                            samples: _mapScreenSamples,
-                            radiusPx: _mapRadiusPx,
-                            intensity: _mapIntensity,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-
-                  if (_mapLoading)
-                    const Positioned(
-                      left: 12,
-                      top: 12,
-                      child: _LightLoadingBadge(),
-                    ),
-
-                  if (!_mapLoading && _mapError.isNotEmpty)
-                    Positioned(
-                      left: 12,
-                      right: 12,
-                      bottom: 12,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                        decoration: BoxDecoration(
-                          color: Colors.black.withOpacity(0.55),
-                          borderRadius: BorderRadius.circular(14),
-                          border: Border.all(color: Colors.white.withOpacity(0.12)),
-                        ),
-                        child: Text(
-                          'Hiba: $_mapError',
-                          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w800),
-                          maxLines: 3,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                    ),
-                ],
-              ),
-            ),
-          ),
-        ],
       ),
     );
   }
@@ -2146,6 +1663,9 @@ class _WeatherScreenState extends State<WeatherScreen> with TickerProviderStateM
                             children: [
                               _header(context, w),
                               const SizedBox(height: 12),
+                              _citySearchBar(context),
+                              const SizedBox(height: 12),
+
                               _sectionTitle(context, title: 'Aktuális állapot', subtitle: 'Gyors, jól olvasható összefoglaló.'),
                               _heroCurrent(context, w),
 
@@ -2267,8 +1787,10 @@ class _WeatherScreenState extends State<WeatherScreen> with TickerProviderStateM
                                           children: [
                                             Text(_weekdayHu(d.date), style: const TextStyle(fontWeight: FontWeight.w900)),
                                             const SizedBox(height: 4),
-                                            Text(isToday ? 'Ma' : _shortDate(d.date),
-                                                style: TextStyle(color: scheme.onSurfaceVariant, fontWeight: FontWeight.w700)),
+                                            Text(
+                                              isToday ? 'Ma' : _shortDate(d.date),
+                                              style: TextStyle(color: scheme.onSurfaceVariant, fontWeight: FontWeight.w700),
+                                            ),
                                             const SizedBox(height: 12),
                                             Text('Átlag: $avgTemp°C', style: const TextStyle(fontWeight: FontWeight.w900)),
                                             const SizedBox(height: 6),
@@ -2282,8 +1804,11 @@ class _WeatherScreenState extends State<WeatherScreen> with TickerProviderStateM
                                 ),
                               ),
 
-                              _sectionTitle(context, title: 'Meteo térkép', subtitle: 'Heatmap / pontfelhő + poligonok (frontok, zónák).'),
-                              _meteoMapSection(context, w),
+                              // ───────────────────────────────────────────────────────────
+                              // METEO / HEATMAP: IDEIGLENESEN KIVÉVE A MEGJELENÍTÉSBŐL
+                              // ───────────────────────────────────────────────────────────
+                              // _sectionTitle(context, title: 'Meteo térkép', subtitle: 'Heatmap / pontfelhő + poligonok (frontok, zónák).'),
+                              // _meteoMapSection(context, w),
 
                               const SizedBox(height: 10),
                             ],
